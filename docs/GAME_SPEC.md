@@ -19,13 +19,28 @@
 
 ## 2. Game Rules
 
-- Standard blackjack with 6-deck shoe
-- Dealer stands on all 17s (hard and soft)
-- Reshuffles when fewer than 52 cards remain in shoe
-- No splitting (future feature)
+### 2.1 Locked submission ruleset
+
+- Standard blackjack using a 6-deck shoe model
+- Dealer **hits soft 17**
+- Blackjack pays **3:2** on a natural two-card 21
 - Double down permitted on any initial 2-card hand
+- Splitting is permitted on matching ranks / ten-value pairs
+- Split hands may be **hit multiple times**
+- Split aces receive **one additional card only**
+- Split aces cannot be resplit
+- Resplitting non-ace pairs is a rules/config toggle and defaults to **disabled** unless later math validation shows it is RTP-safe under the submission target
+- Double-after-split is a rules/config toggle and defaults to **enabled during implementation**, subject to final RTP validation
+- Insurance is offered when dealer shows an Ace
+- Late surrender is **not included by default**, because it increases player RTP; it will only be added if explicitly needed for product reasons and still compatible with the target RTP ceiling
 - Multi-hand play: up to 4 simultaneous hands (desktop), 2 on mobile
 - Play order: right to left across multiple hands
+
+### 2.2 Approval/RTP target
+
+- Base-game RTP target: **below 98.0%**, ideally in a small safety band below the ceiling rather than at the exact maximum
+- Theoretical and exported/published RTP must never exceed **98.0%**
+- Side bets are evaluated and documented separately from the base-game RTP
 
 ---
 
@@ -48,6 +63,8 @@
 | Coloured Pair (same rank, same color) | 12:1 |
 | Mixed Pair (same rank, different color) | 6:1 |
 
+Side-bet payouts use the listed profit multiple. The original side-bet stake is not returned on a win.
+
 ### 3.3 21+3 Side Bet
 
 | Hand | Payout |
@@ -59,6 +76,7 @@
 | Flush | 5:1 |
 
 Note: 21+3 evaluates player's first 2 cards + dealer's up card.
+21+3 payouts use the listed profit multiple. The original side-bet stake is not returned on a win.
 
 ---
 
@@ -66,11 +84,13 @@ Note: 21+3 evaluates player's first 2 cards + dealer's up card.
 
 | Bet Type | Theoretical RTP |
 |----------|----------------|
-| Blackjack (base game) | 99.29%* |
-| Perfect Pairs | 95.90% |
-| 21+3 | 96.30% |
+| Blackjack (base game) | TBD — locked target is **< 98.0%** |
+| Perfect Pairs | 86.4952% |
+| 21+3 | 85.7029% |
 
-*Based on the first hand in the shoe using basic strategy.
+Base-game RTP is currently being reworked around the locked submission ruleset and must finish **at or below 98.0%** before submission. The working target is slightly below the cap so published math remains safely compliant after final validation/export.
+The side-bet RTP values above are exact finite-shoe calculations for the currently implemented 6-deck rules and profit-only side-bet payout convention.
+Combined RTP depends on the actual amount wagered on each selected bet. If equal amounts are wagered on multiple bets, the effective RTP is the simple average of those selected RTP values.
 
 "A player's skill and/or strategy will have an impact on their chances of winning."
 
@@ -90,7 +110,7 @@ Note: 21+3 evaluates player's first 2 cards + dealer's up card.
 - Each hand has independent bet amount
 - Side bet cost: fixed at $0.10 per side bet per hand
 - Bets persist between rounds (auto-carried forward)
-- Insurance bet: half of main bet
+- Insurance bet: floor(half of the total main wager across active hands)
 
 ### 5.3 Money Format
 - Integers multiplied by 1,000,000
@@ -114,9 +134,9 @@ INTRO → BET → DEAL → PLAY → DEALER → RESULT → BET (loop)
 1. **INTRO**: Chad Labs splash screen (3 seconds), displayed once per session
 2. **BET**: Player places chips, toggles side bets, manages hands. Can add/remove hands.
 3. **DEAL**: Cards dealt to all hands + dealer. Sound effect plays.
-4. **INS_PROMPT**: If dealer shows Ace, insurance prompt appears. Auto-declined in auto-play.
-5. **PLAY**: Player actions (Hit/Stand/Double) on each hand, right to left. Active hand highlighted.
-6. **DEALER**: Dealer draws to 17+. Card sound on each draw.
+4. **INS_PROMPT**: If dealer shows Ace, insurance prompt appears. Auto-declined in auto-play unless a specific auto-strategy override is later added.
+5. **PLAY**: Player actions (Hit/Stand/Double/Split, with Surrender only if later enabled) on each hand, right to left. Active hand highlighted.
+6. **DEALER**: Dealer draws using the locked submission rule set, currently **hit soft 17**. Card sound on each draw.
 7. **RESULT**: Results displayed. Bad beat messages on qualifying losses. Payouts credited.
 
 ### 6.3 Immediate Resolutions (after deal, before play)
@@ -143,7 +163,7 @@ Evaluated using player's first 2 cards + dealer's up card.
 - Sequential ranks → Straight (10:1)
 - All same suit → Flush (5:1)
 
-Rank order for straights: A,2,3,4,5,6,7,8,9,10,J,Q,K (Ace is low only)
+Rank order for straights: Ace can be high or low (A-2-3 and Q-K-A both count)
 
 ---
 
@@ -238,23 +258,23 @@ Synthesized via Web Audio API (no external files):
 
 ## 12. Integration Notes
 
-### 12.1 Stake Engine API Endpoints
-- `wallet/authenticate` — Session init
-- `wallet/balance` — Check balance
-- `play/bet` — Place bet, receive outcome
-- `play/end-round` — Finalize round
-- Server-authoritative RNG (not client-side)
+### 12.1 Stake Engine API Flow
+- `Authenticate` — Session init, balance/config bootstrap, active-round resume
+- `Play` — Wagered gameplay action
+- `Event` — In-round progress tracking for resume support
+- `EndRound` — Manual round close when required by the round model
+- Server-authoritative RNG is required for production; the current prototype still uses local runtime randomness
 
 ### 12.2 Production Porting Requirements
 - Frontend: Port React JSX to PixieJS (WebGL canvas) + Svelte
-- Math: Port Python engine to Stake Engine's book-based system
+- Math: Convert the deterministic Python engine into Stake publish files plus replay-safe event records
 - Assets: Upload to Stake Engine CDN (not Google Fonts)
 - Font: Bundle Caveat as local asset
 - Estimated effort: 2-3 weeks frontend, 1-2 weeks math
 
 ### 12.3 Regulatory
 - All payouts match industry standard
-- RTP figures verified via simulation (1M+ rounds)
+- Base-game RTP remains simulation-backed; side-bet RTP is now exact finite-shoe math for the current 6-deck rules
 - Malfunction clause: "Any malfunction voids the game round and all eventual payouts for the round."
 
 ---
