@@ -1,0 +1,25 @@
+Degen Blackjack — RTP Simulation
+Chad Labs / Stake Engine
+Running 1,000,000 rounds per test...
+==================================================
+
+1. Base Game (current estimate: 98.7%)
+   Wagered:  $1,081,516.00
+   Returned: $1,067,706.50
+   RTP:      98.72%
+   PASS
+
+2. Perfect Pairs (target exact: 86.4952%)
+   Wagered:  $100,000.00
+   Returned: $87,067.80
+   RTP:      87.07%
+   PASS
+
+3. 21+3 (target exact: 85.7029%)
+   Wagered:  $100,000.00
+   Returned: $86,303.50
+   RTP:      86.30%
+   PASS
+
+==================================================
+Simulation complete.

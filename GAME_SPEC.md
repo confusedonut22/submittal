@@ -22,7 +22,7 @@
 - Standard blackjack with 6-deck shoe
 - Dealer stands on all 17s (hard and soft)
 - Reshuffles when fewer than 52 cards remain in shoe
-- No splitting (future feature)
+- No splitting in the current build
 - Double down permitted on any initial 2-card hand
 - Multi-hand play: up to 4 simultaneous hands (desktop), 2 on mobile
 - Play order: right to left across multiple hands
@@ -48,6 +48,8 @@
 | Coloured Pair (same rank, same color) | 12:1 |
 | Mixed Pair (same rank, different color) | 6:1 |
 
+Side-bet payouts use the listed profit multiple. The original side-bet stake is not returned on a win.
+
 ### 3.3 21+3 Side Bet
 
 | Hand | Payout |
@@ -59,6 +61,7 @@
 | Flush | 5:1 |
 
 Note: 21+3 evaluates player's first 2 cards + dealer's up card.
+21+3 payouts use the listed profit multiple. The original side-bet stake is not returned on a win.
 
 ---
 
@@ -66,11 +69,13 @@ Note: 21+3 evaluates player's first 2 cards + dealer's up card.
 
 | Bet Type | Theoretical RTP |
 |----------|----------------|
-| Blackjack (base game) | 99.29%* |
-| Perfect Pairs | 95.90% |
-| 21+3 | 96.30% |
+| Blackjack (base game) | 98.7%* |
+| Perfect Pairs | 86.4952% |
+| 21+3 | 85.7029% |
 
-*Based on the first hand in the shoe using basic strategy.
+*Base-game RTP is currently a simulation-backed estimate using basic strategy over the current 6-deck ruleset. The latest 1,000,000-round runs landed at `98.61%` and `98.72%`, so the displayed figure is rounded to `98.7%`.
+The side-bet RTP values above are exact finite-shoe calculations for the currently implemented 6-deck rules and profit-only side-bet payout convention.
+Combined RTP depends on the actual amount wagered on each selected bet. If equal amounts are wagered on multiple bets, the effective RTP is the simple average of those selected RTP values.
 
 "A player's skill and/or strategy will have an impact on their chances of winning."
 
@@ -90,7 +95,9 @@ Note: 21+3 evaluates player's first 2 cards + dealer's up card.
 - Each hand has independent bet amount
 - Side bet cost: fixed at $0.10 per side bet per hand
 - Bets persist between rounds (auto-carried forward)
-- Insurance bet: half of main bet
+- Insurance bet: floor(half of the total main wager across active hands)
+- Insurance is only offered when the dealer shows an Ace
+- If insurance wins, the balance receives the insurance stake back plus 2:1 profit
 
 ### 5.3 Money Format
 - Integers multiplied by 1,000,000
@@ -143,7 +150,7 @@ Evaluated using player's first 2 cards + dealer's up card.
 - Sequential ranks → Straight (10:1)
 - All same suit → Flush (5:1)
 
-Rank order for straights: A,2,3,4,5,6,7,8,9,10,J,Q,K (Ace is low only)
+Rank order for straights: Ace can be high or low (A-2-3 and Q-K-A both count)
 
 ---
 
@@ -238,23 +245,23 @@ Synthesized via Web Audio API (no external files):
 
 ## 12. Integration Notes
 
-### 12.1 Stake Engine API Endpoints
-- `wallet/authenticate` — Session init
-- `wallet/balance` — Check balance
-- `play/bet` — Place bet, receive outcome
-- `play/end-round` — Finalize round
-- Server-authoritative RNG (not client-side)
+### 12.1 Stake Engine API Flow
+- `Authenticate` — Session init, balance/config bootstrap, active-round resume
+- `Play` — Wagered gameplay action
+- `Event` — In-round progress tracking for resume support
+- `EndRound` — Manual round close when required by the round model
+- Server-authoritative RNG is required for production; the current prototype still uses local runtime randomness
 
 ### 12.2 Production Porting Requirements
 - Frontend: Port React JSX to PixieJS (WebGL canvas) + Svelte
-- Math: Port Python engine to Stake Engine's book-based system
+- Math: Convert the deterministic Python engine into Stake publish files plus replay-safe event records
 - Assets: Upload to Stake Engine CDN (not Google Fonts)
 - Font: Bundle Caveat as local asset
 - Estimated effort: 2-3 weeks frontend, 1-2 weeks math
 
 ### 12.3 Regulatory
 - All payouts match industry standard
-- RTP figures verified via simulation (1M+ rounds)
+- Base-game RTP remains simulation-backed; side-bet RTP is now exact finite-shoe math for the current 6-deck rules
 - Malfunction clause: "Any malfunction voids the game round and all eventual payouts for the round."
 
 ---

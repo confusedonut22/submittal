@@ -23,6 +23,11 @@ BJ_MULTIPLIER = 1.5  # 3:2 payout
 MONEY_SCALE = 1_000_000
 
 
+def calculate_insurance_amount(total_main_bet: int) -> int:
+    """Insurance is capped at half of the total main wager."""
+    return total_main_bet // 2
+
+
 class HandResult(Enum):
     WIN = "win"
     LOSE = "lose"
@@ -61,8 +66,9 @@ class Card:
 
 
 class Shoe:
-    def __init__(self, num_decks: int = NUM_DECKS):
+    def __init__(self, num_decks: int = NUM_DECKS, rng: Optional[random.Random] = None):
         self.num_decks = num_decks
+        self.rng = rng or random.Random()
         self.cards: List[Card] = []
         self.shuffle()
 
@@ -72,7 +78,7 @@ class Shoe:
             for suit in SUITS:
                 for rank in RANKS:
                     self.cards.append(Card(rank=rank, suit=suit))
-        random.shuffle(self.cards)
+        self.rng.shuffle(self.cards)
 
     def draw(self) -> Card:
         if len(self.cards) < RESHUFFLE_THRESHOLD:
@@ -129,7 +135,7 @@ class SideBetResult:
 
 def evaluate_perfect_pairs(card1: Card, card2: Card, bet_amount: int) -> SideBetResult:
     """
-    Perfect Pairs side bet (RTP: 95.90%)
+    Perfect Pairs side bet (current 6-deck exact RTP: 86.4952%)
     - Perfect Pair (same rank, same suit): 25:1
     - Coloured Pair (same rank, same color): 12:1
     - Mixed Pair (same rank, different color): 6:1
@@ -161,7 +167,7 @@ def evaluate_perfect_pairs(card1: Card, card2: Card, bet_amount: int) -> SideBet
 
 def evaluate_21_plus_3(player1: Card, player2: Card, dealer_up: Card, bet_amount: int) -> SideBetResult:
     """
-    21+3 side bet (RTP: 96.30%)
+    21+3 side bet (current 6-deck exact RTP: 85.7029%)
     Uses player's first 2 cards + dealer's up card
     - Suited Trips: 100:1
     - Straight Flush: 40:1
@@ -175,7 +181,8 @@ def evaluate_21_plus_3(player1: Card, player2: Card, dealer_up: Card, bet_amount
 
     all_same_suit = suits[0] == suits[1] == suits[2]
     all_same_rank = cards[0].rank == cards[1].rank == cards[2].rank
-    is_sequential = (ranks[2] - ranks[1] == 1 and ranks[1] - ranks[0] == 1)
+    rank_set = {card.rank for card in cards}
+    is_sequential = (ranks[2] - ranks[1] == 1 and ranks[1] - ranks[0] == 1) or rank_set == {"A", "2", "3"} or rank_set == {"Q", "K", "A"}
 
     if all_same_rank and all_same_suit:
         return SideBetResult(SideBetType.TWENTY_ONE_PLUS_THREE, True, "Suited Trips", 100, bet_amount * 100)
@@ -253,10 +260,10 @@ def evaluate_insurance(dealer_cards: List[Card], insurance_amount: int) -> Tuple
     """
     Insurance pays 2:1 if dealer has blackjack.
     Only offered when dealer's up card is an Ace.
-    Returns (dealer_has_bj, payout)
+    Returns (dealer_has_bj, payout) where payout includes the original stake.
     """
     if is_blackjack(dealer_cards):
-        return True, insurance_amount * 2
+        return True, insurance_amount * 3
     return False, 0
 
 
@@ -312,6 +319,9 @@ def deal_round(shoe: Shoe, hand_configs: List[dict]) -> RoundState:
     # Check if insurance should be offered
     if state.dealer_cards[0].rank == "A":
         state.insurance_offered = True
+        state.insurance_amount = calculate_insurance_amount(
+            sum(hand.bet for hand in state.player_hands)
+        )
 
     # Evaluate side bets immediately
     dealer_bj = is_blackjack(state.dealer_cards)
