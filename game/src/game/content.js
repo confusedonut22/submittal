@@ -1,0 +1,163 @@
+// Degen Blackjack — Facts & Bad Beat content
+// Chad Labs / Stake Engine RGS
+
+export const FACTS = [
+  "Octopuses have been observed punching fish during cooperative hunts. Literally punching them.",
+  "Dolphins have individually distinctive signature whistles that function like names.",
+  "Crows can remember your face for years after a single bad interaction. They hold grudges.",
+  "Wombats produce cube-shaped poop because of the mechanical properties of their intestines.",
+  "Some turtles can extract oxygen underwater through cloacal respiration. Yes, through the butt.",
+  "Male seahorses carry the embryos and give birth. The males got the difficult end of the contract.",
+  "Rats emit ultrasonic chirps when tickled. Researchers treat it as a laughter-like response.",
+  "Goats develop group-specific vocal patterns. Basically accents.",
+  "Chimpanzees cache stones to throw at zoo visitors later. Premeditated monkey hostility.",
+  "The alpha wolf concept was challenged by the same researcher who popularized it.",
+  "Lightning can fuse sand into glassy structures called fulgurites.",
+  "Some sand dunes produce a low droning sound when dry grains avalanche in sync.",
+  "Lake Natron in Tanzania is so alkaline that dead animals become preserved and appear stone-like.",
+  "Trees send chemical and electrical warning signals about drought or insect attacks.",
+  "Your brain actively fills in your visual blind spot so you never notice it.",
+  "Aphantasia is a condition where people cannot voluntarily generate mental images at all.",
+  "People systematically overestimate how much others notice their appearance. The spotlight effect.",
+  "False memories can be implanted experimentally. Human memory is a corrupt narrator.",
+  "Unfinished tasks stick in your head more than completed ones. The Zeigarnik effect.",
+  "Napoleon was overwhelmed during a rabbit hunt when the rabbits charged him instead of scattering.",
+  "The shortest recorded war lasted less than 40 minutes. Anglo-Zanzibar War, 1896.",
+  "In medieval Europe, animals were put on trial in human courts. Pigs and rats got lawyers.",
+  "The earliest known vending machine dispensed holy water in the first century.",
+  "Cleopatra lived closer in time to the Moon landing than to the construction of the Great Pyramid.",
+  "Bees can be trained to recognize human faces despite brains the size of poppy seeds.",
+  "Elephants communicate through very low-frequency sounds and ground vibrations over long distances.",
+  "Selecting only for tameness in foxes rapidly changed not just behavior but physical traits too.",
+  "Koalas have such a nutritionally poor diet they rely on enormous hindgut fermentation.",
+  "Parasitoid wasps lay eggs inside other animals and the larvae eat the host alive.",
+  "Your brain edits out your nose from your vision at all times. You are looking at it right now.",
+  "You cannot hum while holding your nose closed.",
+  "Your brain can delay pain signals in extreme situations.",
+  "Stress sweat has a different chemical signature. Humans can literally smell fear.",
+  "You are slightly taller in the morning because your spine decompresses overnight.",
+  "Your body replaces most of your skeleton roughly every 10 years.",
+  "There are mites living in your eyelashes right now eating oils and dead skin.",
+  "Your brain uses about 20 percent of your total energy while doing absolutely nothing.",
+  "There are parasites that make ants climb to high places and clamp down before dying.",
+  "Sloths sometimes die because they mistake their own arm for a tree branch and fall.",
+  "Sharks can detect a heartbeat through electrical signals in the water.",
+  "Pinecones open and close based on humidity levels.",
+  "Some mushrooms glow in the dark. Bioluminescent fungi are real.",
+  "There is a jellyfish that can revert to its younger form instead of dying. Biologically immortal.",
+  "A single cloud can weigh over a million kilograms and still float.",
+  "There are places where it rains fish due to waterspouts picking them up from the ocean.",
+  "People used to wash clothes with urine because of its ammonia content.",
+  "Europeans once genuinely feared tomatoes were poisonous.",
+  "Vikings used cats on ships to control rat populations.",
+  "Ancient Romans used crushed mouse brains as toothpaste.",
+  "The inventor of the Pringles can is buried in one.",
+  "You can die from drinking too much water. It is called hyponatremia.",
+  "There are more trees on Earth than stars in the Milky Way.",
+  "A day on Earth used to be significantly shorter hundreds of millions of years ago.",
+  "Petrichor is the name for the smell of rain on dry earth.",
+  "Some metals like sodium explode violently when they touch water.",
+  "There are fish that can walk on land for extended periods.",
+  "Your stomach gets a new lining every few days so it does not digest itself.",
+  "There are people with a rare condition who feel no pain at all.",
+  "You can start hallucinating from sleep deprivation within just a few days.",
+  "Your brain is more active during dreaming than while watching television.",
+  "Some parasites require multiple hosts and manipulate behavior at each stage.",
+  "Capgras delusion makes people believe their loved ones have been replaced by imposters.",
+  "Prosopagnosia is a condition where you completely lose the ability to recognize faces.",
+  "Some people remember every single day of their life in extraordinary detail. Hyperthymesia.",
+  "Honey never spoils. Archaeologists found 3000-year-old honey that was still edible.",
+  "A group of flamingos is called a flamboyance.",
+  "The dot over i and j is called a tittle.",
+  "Scotland's national animal is the unicorn.",
+  "Bananas are technically berries. Strawberries are not.",
+  "There are more possible chess games than atoms in the observable universe.",
+  "Oxford University is older than the Aztec Empire.",
+  "The speed of a computer mouse is measured in Mickeys.",
+  "A jiffy is an actual unit of time. One trillionth of a second.",
+  "Maine is the closest US state to Africa.",
+  "Russia has a larger surface area than Pluto.",
+  "An octopus has three hearts and blue blood.",
+  "There is a basketball court on the top floor of the US Supreme Court building.",
+  "A group of porcupines is called a prickle.",
+  "Astronauts grow up to 2 inches taller in space.",
+  "The Hawaiian alphabet has only 13 letters.",
+  "The average person walks the equivalent of five times around the Earth in their lifetime.",
+  "Venus is the only planet that spins clockwise.",
+  "A bolt of lightning is five times hotter than the surface of the sun.",
+  "A cockroach can live for weeks without its head before starving.",
+  "Your heart beats around 100,000 times per day.",
+  "The Eiffel Tower can grow up to 6 inches taller in summer due to thermal expansion.",
+  "Polar bear fur is transparent and appears white because it reflects light.",
+  "The longest English word without a true vowel is rhythm.",
+  "Cows have best friends and get stressed when separated from them.",
+  "The Great Wall of China is not visible from space with the naked eye.",
+  "Hot water can freeze faster than cold water under certain conditions. The Mpemba effect.",
+  "Butterflies taste with their feet.",
+  "A snail can sleep for three years straight.",
+  "The total weight of all ants on Earth roughly equals the total weight of all humans.",
+  "Your nose can detect over 1 trillion different scents.",
+  "Sea otters hold hands while sleeping so they do not drift apart.",
+  "The shortest complete sentence in English is Go.",
+  "There are more fake flamingos in the world than real ones.",
+  "Humans share about 60 percent of their DNA with bananas.",
+  "The average person spends 6 months of their lifetime waiting for red lights.",
+  "Cats have over 20 different vocalizations including at least 100 different meow sounds.",
+  "There is a species of ant that explodes itself to protect its colony.",
+  "The longest hiccupping spree lasted 68 years.",
+  "Water can boil and freeze at the same time under specific pressure conditions. The triple point.",
+  "Some species of bamboo can grow up to 35 inches in a single day.",
+  "There is a town in Norway called Hell and it freezes over every winter.",
+  "The longest time between two twins being born is 87 days.",
+  "A flea can jump up to 150 times its own body length.",
+  "The inventor of the fire hydrant is unknown because the patent was destroyed in a fire.",
+  "More people are killed by vending machines each year than by sharks.",
+  "Your brain generates enough electricity to power a small light bulb.",
+  "There are more stars in the universe than grains of sand on all of Earth's beaches.",
+  "An adult human body contains approximately 7 octillion atoms.",
+  "The oldest known joke is a Sumerian fart joke from 1900 BC.",
+  "A blue whale heart is so large a small child could swim through its arteries.",
+  "Saudi Arabia imports camels from Australia.",
+  "The average person will spend about 26 years sleeping in their lifetime.",
+  "Humans are the only animals whose brains shrink as they age.",
+  "There is a species of shrimp that snaps its claw so fast it creates a bubble hotter than the Sun.",
+  "A group of owls is called a parliament.",
+  "The original name for Google was Backrub.",
+  "A day on Venus is longer than a year on Venus.",
+  "The total length of all blood vessels in the human body is about 60000 miles.",
+  "Peanuts are one of the ingredients in dynamite.",
+  "If you could fold a piece of paper 42 times it would reach the moon.",
+  "There are more bacterial cells in your body than human cells.",
+  "The average person produces enough saliva in their lifetime to fill two swimming pools.",
+  "Pigeons can do math at roughly the same level as primates in certain experiments.",
+  "A teaspoon of neutron star material would weigh about 6 billion tons.",
+  "The last letter added to the English alphabet was J.",
+  "Humans glow in the dark but the light is 1000 times weaker than what our eyes can detect.",
+  "The chance of you existing at all is roughly 1 in 10 to the power of 2685000.",
+];
+
+export function randomFact() {
+  return FACTS[Math.floor(Math.random() * FACTS.length)];
+}
+
+// Bad beat message pools
+const BB_20_vs_21 = ["RIGGED", "House always wins", "You gotta be kidding", "That is criminal"];
+const BB_CLOSE    = ["Close but no cigar", "Almost had it", "So close yet so far", "Pain."];
+const BB_BUST_22  = ["One too many", "Should have stood", "That last card was personal"];
+const BB_DOUBLE   = ["Full send into a wall", "Doubled down on disaster", "Aggressive and wrong"];
+const BB_STREAK   = ["At this point it is personal", "The table hates you", "Maybe try checkers", "Down bad"];
+const BB_GENERIC  = ["Tough break", "Dealer got lucky", "Not your round", "It happens"];
+
+function pick(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+export function getBadBeat(playerVal, dealerVal, isBust, isDouble, lossStreak) {
+  if (isDouble)                         return pick(BB_DOUBLE);
+  if (playerVal === 20 && dealerVal === 21) return pick(BB_20_vs_21);
+  if (playerVal >= 19 && dealerVal > playerVal) return pick(BB_CLOSE);
+  if (isBust && playerVal === 22)       return pick(BB_BUST_22);
+  if (lossStreak >= 5)                  return pick(BB_STREAK);
+  if (Math.random() < 0.15)            return pick(BB_GENERIC);
+  return null;
+}
