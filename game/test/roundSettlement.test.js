@@ -10,7 +10,7 @@ import {
 
 const makeCard = (rank, suit) => ({ rank, suit });
 
-const makeHand = ({ cards, bet, sb = { pp: 0, t: 0 }, result = null, message = "", payout = 0, done = false, doubled = false }) => ({
+const makeHand = ({ cards, bet, sb = { pp: 0, t: 0 }, result = null, message = "", payout = 0, done = false, doubled = false, countsAsBlackjack = true, isSplitAcesLocked = false }) => ({
   cards,
   bet,
   sb,
@@ -19,6 +19,8 @@ const makeHand = ({ cards, bet, sb = { pp: 0, t: 0 }, result = null, message = "
   payout,
   done,
   doubled,
+  countsAsBlackjack,
+  isSplitAcesLocked,
   sideBetResults: [],
 });
 
@@ -123,6 +125,23 @@ test("dealer resolution uses deterministic shuffle-ready math helpers", () => {
     }),
   ];
   const dealerCards = [makeCard("10", "spades"), makeCard("8", "diamonds"), makeCard("4", "clubs")];
+
+  const settled = settleDealerHands(hands, dealerCards);
+
+  assert.equal(settled.hands[0].result, "win");
+  assert.equal(settled.hands[0].payout, 2_000_000);
+  assert.equal(settled.payout, 2_000_000);
+});
+
+test("split-created 21 is settled as a regular win, not blackjack", () => {
+  const hands = [
+    makeHand({
+      cards: [makeCard("A", "hearts"), makeCard("K", "clubs")],
+      bet: 1_000_000,
+      countsAsBlackjack: false,
+    }),
+  ];
+  const dealerCards = [makeCard("10", "spades"), makeCard("7", "diamonds")];
 
   const settled = settleDealerHands(hands, dealerCards);
 
