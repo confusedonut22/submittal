@@ -11,7 +11,7 @@
 - [x] Ensure split 21 does not pay natural blackjack
 - [x] Enforce split-ace one-card rule
 - [x] Prevent resplit aces
-- [ ] Validate total wager changes on split and double
+- [x] Validate total wager changes on split and double
 - [ ] Ensure multi-hand progression/order is correct
 - [ ] Decide/validate DAS behavior against RTP target
 
@@ -36,7 +36,7 @@
 - [x] Add split creation test(s)
 - [x] Add split-21-not-blackjack test(s)
 - [x] Add split-ace-lock test(s)
-- [ ] Add wager accounting test(s)
+- [x] Add wager accounting test(s)
 - [ ] Add math-side regression tests where needed
 
 ## 5. Docs / submission
