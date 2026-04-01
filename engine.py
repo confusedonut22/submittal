@@ -22,6 +22,20 @@ BJ_MULTIPLIER = 1.5  # 3:2 payout
 # 1_000_000 = $1.00
 MONEY_SCALE = 1_000_000
 
+next_hand_id = 1
+
+
+def reset_hand_id_sequence() -> None:
+    global next_hand_id
+    next_hand_id = 1
+
+
+def create_hand_id(prefix: str = "hand") -> str:
+    global next_hand_id
+    value = f"{prefix}-{next_hand_id}"
+    next_hand_id += 1
+    return value
+
 
 def calculate_insurance_amount(total_main_bet: int) -> int:
     """Insurance is capped at half of the total main wager."""
@@ -121,6 +135,10 @@ def is_bust(cards: List[Card]) -> bool:
     return hand_value(cards) > 21
 
 
+def split_value(card: Card) -> int:
+    return min(10, card.value)
+
+
 # ─── SIDE BET EVALUATION ───
 # Payouts match Stake.com live blackjack exactly
 
@@ -201,49 +219,10 @@ def evaluate_21_plus_3(player1: Card, player2: Card, dealer_up: Card, bet_amount
 # ─── MAIN HAND RESOLUTION ───
 
 def resolve_hand(player_cards: List[Card], dealer_cards: List[Card], bet_amount: int) -> Tuple[HandResult, int]:
-    """
-    Resolve a single hand against the dealer.
-    Returns (result, payout_amount) where payout includes original bet.
-    
-    Main game payouts (true, no scaling):
-    - Win: bet × 2 (1:1)
-    - Blackjack: bet + floor(bet × 1.5) (3:2)
-    - Push: bet returned
-    - Lose: 0
-    """
-    player_val = hand_value(player_cards)
-    dealer_val = hand_value(dealer_cards)
-    player_bj = is_blackjack(player_cards)
-    dealer_bj = is_blackjack(dealer_cards)
-
-    # Both blackjack = push
-    if player_bj and dealer_bj:
-        return HandResult.PUSH, bet_amount
-
-    # Player blackjack
-    if player_bj:
-        payout = bet_amount + int(bet_amount * BJ_MULTIPLIER)
-        return HandResult.BLACKJACK, payout
-
-    # Dealer blackjack
-    if dealer_bj:
-        return HandResult.LOSE, 0
-
-    # Player bust
-    if player_val > 21:
-        return HandResult.BUST, 0
-
-    # Dealer bust
-    if dealer_val > 21:
-        return HandResult.WIN, bet_amount * 2
-
-    # Compare values
-    if player_val > dealer_val:
-        return HandResult.WIN, bet_amount * 2
-    elif player_val == dealer_val:
-        return HandResult.PUSH, bet_amount
-    else:
-        return HandResult.LOSE, 0
+    return resolve_hand_state(
+        HandState(cards=list(player_cards), bet=bet_amount),
+        dealer_cards,
+    )
 
 
 def dealer_play(dealer_cards: List[Card], shoe: Shoe) -> List[Card]:
@@ -278,6 +257,21 @@ class HandState:
     payout: int = 0
     side_bet_results: List[SideBetResult] = field(default_factory=list)
     doubled: bool = False
+    hand_id: str = field(default_factory=create_hand_id)
+    parent_hand_id: Optional[str] = None
+    split_root_id: Optional[str] = None
+    split_depth: int = 0
+    is_split_hand: bool = False
+    from_split_aces: bool = False
+    split_aces_locked: bool = False
+    counts_as_blackjack: bool = True
+    done: bool = False
+    stood: bool = False
+    busted: bool = False
+
+    def __post_init__(self) -> None:
+        if self.split_root_id is None:
+            self.split_root_id = self.hand_id
 
 
 @dataclass
@@ -291,11 +285,93 @@ class RoundState:
     total_returned: int = 0
 
 
+def resolve_hand_state(hand: HandState, dealer_cards: List[Card]) -> Tuple[HandResult, int]:
+    player_val = hand_value(hand.cards)
+    dealer_val = hand_value(dealer_cards)
+    player_bj = hand.counts_as_blackjack and is_blackjack(hand.cards)
+    dealer_bj = is_blackjack(dealer_cards)
+
+    if player_bj and dealer_bj:
+        return HandResult.PUSH, hand.bet
+    if player_bj:
+        payout = hand.bet + int(hand.bet * BJ_MULTIPLIER)
+        return HandResult.BLACKJACK, payout
+    if dealer_bj:
+        return HandResult.LOSE, 0
+    if player_val > 21:
+        return HandResult.BUST, 0
+    if dealer_val > 21:
+        return HandResult.WIN, hand.bet * 2
+    if player_val > dealer_val:
+        return HandResult.WIN, hand.bet * 2
+    if player_val == dealer_val:
+        return HandResult.PUSH, hand.bet
+    return HandResult.LOSE, 0
+
+
+def can_split_hand(hand: HandState, allow_same_value_split: bool = True) -> bool:
+    if hand.done or hand.doubled or hand.split_aces_locked:
+        return False
+    if len(hand.cards) != 2:
+        return False
+    a, b = hand.cards
+    if a.rank == b.rank:
+        return True
+    if not allow_same_value_split:
+        return False
+    return split_value(a) == split_value(b)
+
+
+def split_hand(state: RoundState, hand_index: int, shoe: Shoe, allow_same_value_split: bool = True) -> Tuple[bool, List[HandState]]:
+    hand = state.player_hands[hand_index]
+    if not can_split_hand(hand, allow_same_value_split=allow_same_value_split):
+        return False, []
+
+    first_card, second_card = hand.cards
+    splitting_aces = first_card.rank == "A" and second_card.rank == "A"
+    root_id = hand.split_root_id or hand.hand_id
+    next_depth = hand.split_depth + 1
+
+    first_hand = HandState(
+        cards=[first_card, shoe.draw()],
+        bet=hand.bet,
+        side_bets=dict(hand.side_bets),
+        parent_hand_id=hand.hand_id,
+        split_root_id=root_id,
+        split_depth=next_depth,
+        is_split_hand=True,
+        from_split_aces=splitting_aces,
+        counts_as_blackjack=False,
+    )
+    second_hand = HandState(
+        cards=[second_card, shoe.draw()],
+        bet=hand.bet,
+        side_bets={},
+        parent_hand_id=hand.hand_id,
+        split_root_id=root_id,
+        split_depth=next_depth,
+        is_split_hand=True,
+        from_split_aces=splitting_aces,
+        counts_as_blackjack=False,
+    )
+
+    if splitting_aces:
+        for split_child in (first_hand, second_hand):
+            split_child.split_aces_locked = True
+            split_child.done = True
+            split_child.stood = True
+
+    state.player_hands[hand_index:hand_index + 1] = [first_hand, second_hand]
+    state.total_wagered += hand.bet
+    return True, [first_hand, second_hand]
+
+
 def deal_round(shoe: Shoe, hand_configs: List[dict]) -> RoundState:
     """
     Deal a new round.
     hand_configs: list of {"bet": int, "side_bets": {SideBetType: int}}
     """
+    reset_hand_id_sequence()
     state = RoundState()
 
     # Deal dealer cards
@@ -354,8 +430,8 @@ def complete_round(state: RoundState, shoe: Shoe) -> RoundState:
     # Resolve each hand
     for hand in state.player_hands:
         if hand.result is None:  # Not already resolved (BJ/bust during play)
-            hand.result, hand.payout = resolve_hand(
-                hand.cards, state.dealer_cards, hand.bet
+            hand.result, hand.payout = resolve_hand_state(
+                hand, state.dealer_cards
             )
 
     # Calculate total returned

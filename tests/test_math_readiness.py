@@ -11,7 +11,7 @@ import sys
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from engine import Card, MONEY_SCALE, Shoe, evaluate_21_plus_3, evaluate_perfect_pairs
+from engine import Card, MONEY_SCALE, Shoe, HandState, resolve_hand_state, evaluate_21_plus_3, evaluate_perfect_pairs
 from exact_sidebet_math import perfect_pairs_stats, twenty_one_plus_three_stats
 from stake_export import simulate_bundle, write_bundle
 
@@ -97,6 +97,18 @@ class MathReadinessTests(unittest.TestCase):
         self.assertEqual(stats["categories"]["Straight"], 155520)
         self.assertEqual(stats["categories"]["Flush"], 292896)
         self.assertAlmostEqual(stats["rtp"] * 100, 85.70288750767953, places=10)
+
+    def test_split_hand_twenty_one_is_not_blackjack_in_math_engine(self):
+        hand = HandState(
+            cards=[Card(rank="A", suit="hearts"), Card(rank="K", suit="clubs")],
+            bet=MONEY_SCALE,
+            is_split_hand=True,
+            counts_as_blackjack=False,
+        )
+        dealer_cards = [Card(rank="10", suit="spades"), Card(rank="7", suit="diamonds")]
+        result, payout = resolve_hand_state(hand, dealer_cards)
+        self.assertEqual(result.value, "win")
+        self.assertEqual(payout, MONEY_SCALE * 2)
 
 
 if __name__ == "__main__":
