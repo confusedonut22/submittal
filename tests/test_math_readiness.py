@@ -76,6 +76,8 @@ class MathReadinessTests(unittest.TestCase):
             index_payload = json.loads(written["index"].read_text(encoding="utf-8"))
             self.assertTrue(index_payload["draft"])
             self.assertEqual(index_payload["modes"][0]["name"], "base")
+            self.assertTrue(any("single-hand round records" in note for note in index_payload["notes"]))
+            self.assertTrue(any("Side bets should be disclosed" in note for note in index_payload["notes"]))
             with written["csv"].open(encoding="utf-8") as handle:
                 rows = list(csv.reader(handle))
             self.assertEqual(rows[0], ["simulation_number", "round_probability", "payout_multiplier"])

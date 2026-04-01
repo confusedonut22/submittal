@@ -355,6 +355,8 @@ def write_bundle(out_dir: Path, records: List[Dict]) -> Dict[str, Path]:
                     "simulation_number is a sequential integer id for each unique round record.",
                     "round_probability currently uses deterministic simulation frequency counts, not final published math weights.",
                     "payoutMultiplier is normalized against total round wager, including doubles and insurance when present.",
+                    "Current scaffold only exports single-hand round records and is not yet the final split-capable submission bundle.",
+                    "Side bets should be disclosed and validated separately from the base-game RTP.",
                     "Compression to .jsonl.zst requires the optional zstandard dependency.",
                 ],
                 "modes": [
