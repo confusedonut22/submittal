@@ -6,6 +6,8 @@ This document tracks the current frontend submission blockers for
 ## confirmed
 
 - The frontend builds to static files with Vite/Svelte.
+- The imported frontend source now includes a split action path in the runtime/store layer.
+- Current frontend tests are green, including a settlement regression that verifies split-created 21 is resolved as a normal win rather than a natural blackjack.
 - The app now parses Stake-style launch params:
   - `sessionID`
   - `lang`
@@ -44,6 +46,7 @@ This document tracks the current frontend submission blockers for
 
 ## confirmed blockers
 
+- Split support exists in the current frontend/runtime path, but multi-hand progression, wager-accounting coverage, and final player-facing messaging still need a stronger submission pass.
 - The mock RGS can now own round creation, actions, replay fetch, and persisted active-round state, but it is still a local scaffold rather than a real Stake-integrated backend.
 - Resume only works when the returned `round.state` matches the current repo-local draft snapshot shape.
 - Replay mode can now hydrate completed mock-RGS rounds, but it is still not a final reviewer-grade replay implementation.
@@ -62,10 +65,11 @@ This document tracks the current frontend submission blockers for
 
 ## next repo-safe steps
 
-1. Replace the local mock RGS with a real service boundary that owns wallet/session authority beyond local JSON scaffolding.
-2. Freeze the final backend-owned blackjack round-resume strategy for active rounds returned by authenticate, including the exact `round.state` contract.
-3. Decide how side bets and insurance map into authenticated Stake config and round lifecycle.
-4. Treat replay as a blackjack-specific open question until Stake confirms the required behavior.
+1. Strengthen split-related frontend coverage around wager accounting, active-hand progression, and multi-hand result messaging.
+2. Replace the local mock RGS with a real service boundary that owns wallet/session authority beyond local JSON scaffolding.
+3. Freeze the final backend-owned blackjack round-resume strategy for active rounds returned by authenticate, including the exact `round.state` contract.
+4. Decide how side bets and insurance map into authenticated Stake config and round lifecycle.
+5. Treat replay as a blackjack-specific open question until Stake confirms the required behavior.
 
 See also:
 
