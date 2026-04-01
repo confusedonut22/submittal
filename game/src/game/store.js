@@ -234,8 +234,11 @@ async function runAutoLoop() {
   scheduleAutoLoop(sp.draw);
 }
 
-function findNextActive(hs) {
-  for (let i = hs.length - 1; i >= 0; i--) {
+function findNextActive(hs, currentIdx = hs.length) {
+  for (let i = currentIdx + 1; i < hs.length; i++) {
+    if (!hs[i].done) return i;
+  }
+  for (let i = 0; i <= currentIdx && i < hs.length; i++) {
     if (!hs[i].done) return i;
   }
   return -1;
@@ -754,7 +757,7 @@ function resolveInitial(dealerCards, hs, insuranceOffers = []) {
 
   hands.set(updated);
 
-  const nx = findNextActive(updated);
+  const nx = findNextActive(updated, -1);
   if (nx >= 0) {
     activeHand.set(nx);
     phase.set(PHASE.PLAY);
@@ -895,7 +898,7 @@ export function doubleDown() {
 }
 
 function advanceOrDealer(updatedHands, currentIdx) {
-  const nx = findNextActive(updatedHands);
+  const nx = findNextActive(updatedHands, currentIdx);
   if (nx >= 0) {
     setTimeout(() => activeHand.set(nx), 150);
   } else {
@@ -1018,6 +1021,10 @@ export function split() {
     advanceOrDealer(nextHands, $actH);
   }
 }
+
+export const __testables = {
+  findNextActive,
+};
 
 export function autoTick() {
   if (get(autoPlay)) scheduleAutoLoop(0);
