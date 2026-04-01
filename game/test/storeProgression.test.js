@@ -2,9 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { createHandState } from "../src/game/engine.js";
-import { __testables } from "../src/game/store.js";
-
-const { findNextActive } = __testables;
+import { findNextActive } from "../src/game/progression.js";
 
 test("findNextActive advances to the next unresolved hand after the current index", () => {
   const hands = [

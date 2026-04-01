@@ -27,6 +27,7 @@ import {
 import { endRound, fetchBalance, playRound, postRoundEvent } from "./rgsClient.js";
 import { buildStakeEventPayload } from "./stakeRound.js";
 import { buildRoundStateSnapshot, canHydrateRoundState } from "./stakeRoundState.js";
+import { findNextActive } from "./progression.js";
 
 // ─── STATE ───
 
@@ -232,16 +233,6 @@ async function runAutoLoop() {
   }
 
   scheduleAutoLoop(sp.draw);
-}
-
-function findNextActive(hs, currentIdx = hs.length) {
-  for (let i = currentIdx + 1; i < hs.length; i++) {
-    if (!hs[i].done) return i;
-  }
-  for (let i = 0; i <= currentIdx && i < hs.length; i++) {
-    if (!hs[i].done) return i;
-  }
-  return -1;
 }
 
 function hasStakeSession() {
@@ -1022,9 +1013,6 @@ export function split() {
   }
 }
 
-export const __testables = {
-  findNextActive,
-};
 
 export function autoTick() {
   if (get(autoPlay)) scheduleAutoLoop(0);
