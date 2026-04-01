@@ -27,7 +27,8 @@ It owns:
 - active round creation
 - per-hand bets and side bets
 - insurance
-- hit / stand / double
+- hit / stand / double / split
+- split aces (locked to one card each, no resplit, no double after split)
 - dealer play
 - final settlement
 - returned `round.state`
@@ -40,9 +41,9 @@ This is a local integration scaffold, not a final Stake backend.
 Known limitations:
 
 - persistence is local JSON scaffolding, not production session storage
-- no split support
 - no production auth
 - frontend and backend still share a draft blackjack `round.state` contract
+- double after split (DAS) is not allowed by design
 
 ## how to run it
 

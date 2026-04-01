@@ -1,3 +1,11 @@
+@font-face {
+  font-family: 'Caveat';
+  src: url('/src/assets/fonts/caveat.woff2') format('woff2');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; }
 body { background: #071a0e; }

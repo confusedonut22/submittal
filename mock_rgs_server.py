@@ -21,7 +21,7 @@ def write_json(handler: BaseHTTPRequestHandler, status: int, payload: Dict[str, 
     handler.send_header("Content-Type", "application/json")
     handler.send_header("Access-Control-Allow-Origin", "*")
     handler.send_header("Access-Control-Allow-Headers", "Content-Type")
-    handler.send_header("Access-Control-Allow-Methods", "POST, OPTIONS")
+    handler.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
     handler.send_header("Content-Length", str(len(body)))
     handler.end_headers()
     handler.wfile.write(body)
@@ -42,6 +42,22 @@ class MockRGSHandler(BaseHTTPRequestHandler):
                 "service": "mock-rgs",
                 "storagePath": str(self.server.config.storage_path),
             })
+
+        # Official Stake Bet Replay endpoint:
+        # GET /bet/replay/{game}/{version}/{mode}/{event}
+        parts = self.path.lstrip("/").split("/")
+        if len(parts) == 6 and parts[0] == "bet" and parts[1] == "replay":
+            # parts: ["bet", "replay", game, version, mode, event]
+            # /bet/replay/{game}/{version}/{mode}/{event}
+            event_id = parts[5]
+            try:
+                result = self.service.replay_by_event_id(event_id)
+                return write_json(self, 200, result)
+            except ValueError as exc:
+                return write_json(self, 404, {"error": str(exc)})
+            except Exception as exc:  # pragma: no cover
+                return write_json(self, 500, {"error": str(exc)})
+
         return write_json(self, 404, {"error": "Not Found"})
 
     def do_POST(self) -> None:

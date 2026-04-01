@@ -43,10 +43,12 @@ This document tracks the current frontend submission blockers for
 - Replay bootstrap can now fetch a completed round from the mock RGS and hydrate the replay state locally.
 - Local launch can now fall back to Vite env defaults for `sessionID` and `rgs_url`, while still allowing Stake-style query params to override them.
 - The static build now uses relative asset paths, which is safer for CDN subpath hosting instead of assuming a domain-root `/assets` path.
+- Button legality for split hands now correctly blocks double-after-split by default
+- Font assets are bundled locally (no external resource loading)
 
 ## confirmed blockers
 
-- Split support exists in the current frontend/runtime path, but multi-hand progression, wager-accounting coverage, and final player-facing messaging still need a stronger submission pass.
+- Split is now functional with DAS=false (double-after-split blocked by default); multi-hand progression, wager-accounting coverage, and final player-facing messaging still need a stronger submission pass.
 - The mock RGS can now own round creation, actions, replay fetch, and persisted active-round state, but it is still a local scaffold rather than a real Stake-integrated backend.
 - Resume only works when the returned `round.state` matches the current repo-local draft snapshot shape.
 - Replay mode can now hydrate completed mock-RGS rounds, but it is still not a final reviewer-grade replay implementation.

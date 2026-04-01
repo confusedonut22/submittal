@@ -18,6 +18,11 @@ NUM_DECKS = 6
 RESHUFFLE_THRESHOLD = 52  # reshuffle when fewer than this many cards remain
 BJ_MULTIPLIER = 1.5  # 3:2 payout
 
+# ─── APPROVAL RULESET LOCK ───
+# Stake Engine approval: H17, no double after split, no resplitting
+ALLOW_DAS = False      # No double after split (reduces RTP ~0.14%)
+ALLOW_RESPLIT = False  # No resplitting allowed (reduces RTP ~0.05%)
+
 # Stake Engine money format: integers with 6 decimal places
 # 1_000_000 = $1.00
 MONEY_SCALE = 1_000_000
@@ -226,9 +231,9 @@ def resolve_hand(player_cards: List[Card], dealer_cards: List[Card], bet_amount:
 
 
 def dealer_play(dealer_cards: List[Card], shoe: Shoe) -> List[Card]:
-    """Dealer draws until reaching 17 or higher. Stands on all 17s."""
+    """Dealer draws until reaching 17 or higher. Hits soft 17 (H17 rule)."""
     cards = list(dealer_cards)
-    while hand_value(cards) < 17:
+    while hand_value(cards) < 17 or (hand_value(cards) == 17 and is_soft(cards)):
         cards.append(shoe.draw())
     return cards
 

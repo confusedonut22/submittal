@@ -109,7 +109,7 @@ export function canDoubleHand(hand, balance = Number.POSITIVE_INFINITY, rules = 
   if ((hand.cards?.length ?? 0) !== 2) return false;
   if (balance < hand.bet) return false;
   if (hand.isSplitAcesLocked) return false;
-  if (hand.isSplitHand && rules.allowDoubleAfterSplit === false) return false;
+  if (hand.isSplitHand && rules.allowDoubleAfterSplit !== true) return false;
   return true;
 }
 

@@ -16,3 +16,4 @@ stake_export_draft_verify/
 stake_export_draft_zstd/
 stake_submission_bundle/
 stake_submission_bundle.zip
+__pycache__/

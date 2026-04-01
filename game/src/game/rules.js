@@ -58,3 +58,6 @@ export const C = {
 };
 
 export const CARD = { w: 64, h: 90, ws: 50, hs: 70 };
+
+// DEALER RULE: Hits soft 17 (H17)
+export const DEALER_HITS_SOFT_17 = true;

@@ -133,7 +133,39 @@ export async function fetchBalance(session) {
   };
 }
 
+export async function fetchReplayBet(session) {
+  const game = session.game || "degen-blackjack";
+  const version = session.version || "1";
+  const mode = session.mode || "BASE";
+  const event = session.event;
+
+  const url = joinRgsUrl(session.rgsUrl, `/bet/replay/${game}/${version}/${mode}/${event}`);
+  const response = await fetch(url, {
+    method: "GET",
+    headers: { accept: "application/json" },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Replay fetch failed: HTTP ${response.status}`);
+  }
+
+  const body = await response.json();
+  return {
+    payoutMultiplier: body.payoutMultiplier ?? null,
+    costMultiplier: body.costMultiplier ?? 1.0,
+    state: body.state ?? null,
+    raw: body,
+  };
+}
+
 export async function fetchReplayEvent(session) {
+  // Try the official Stake GET endpoint first; fall back to the legacy POST.
+  try {
+    return await fetchReplayBet(session);
+  } catch (_getError) {
+    // GET endpoint unavailable or returned an error — fall through to POST.
+  }
+
   const body = await postJson(
     joinRgsUrl(session.rgsUrl, "/replay/event"),
     {

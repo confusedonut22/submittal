@@ -2,7 +2,7 @@
 Degen Blackjack — RTP Simulator
 Chad Labs / Stake Engine
 Runs rounds to approximate current implemented RTP:
-  - Base game: ~98.7% simulation-backed estimate with basic strategy
+  - Base game: ~97.4% simulation-backed estimate with basic strategy + H17
   - Perfect Pairs: 86.4952% exact for current 6-deck profit-only rules
   - 21+3: 85.7029% exact for current 6-deck profit-only rules
 """
@@ -113,10 +113,8 @@ def simulate_base_game(num_rounds=1_000_000, bet=MONEY_SCALE):
                 pass  # already counted the extra wager
             continue
 
-        # Dealer plays
-        while hand_value(dealer_cards) < 17:
-            dealer_cards.append(shoe.draw())
-
+        # Dealer plays (H17 — hits soft 17, via engine.dealer_play)
+        dealer_cards = dealer_play(dealer_cards, shoe)
         dv = hand_value(dealer_cards)
 
         if dv > 21:
@@ -183,12 +181,12 @@ def main():
     print(f"Running {num_rounds:,} rounds per test...")
     print(f"{'='*50}")
 
-    print(f"\n1. Base Game (current estimate: 98.7%)")
+    print(f"\n1. Base Game (current estimate: ~97.4%, H17 rules)")
     rtp, wagered, returned = simulate_base_game(num_rounds)
     print(f"   Wagered:  ${wagered / MONEY_SCALE:,.2f}")
     print(f"   Returned: ${returned / MONEY_SCALE:,.2f}")
     print(f"   RTP:      {rtp:.2f}%")
-    print(f"   {'PASS' if 98.5 < rtp < 100.0 else 'CHECK'}")
+    print(f"   {'PASS' if 95.0 < rtp < 98.0 else 'CHECK -- must be below 98.0%'}")
 
     print(f"\n2. Perfect Pairs (target exact: 86.4952%)")
     rtp, wagered, returned = simulate_perfect_pairs(num_rounds)

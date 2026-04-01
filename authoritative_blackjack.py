@@ -18,6 +18,7 @@ from engine import (
     MONEY_SCALE,
     Card,
     HandResult,
+    HandState,
     Shoe,
     SideBetType,
     calculate_insurance_amount,
@@ -28,6 +29,8 @@ from engine import (
     hand_value,
     is_blackjack,
     resolve_hand,
+    resolve_hand_state,
+    split_value,
 )
 
 ROUND_STATE_SCHEMA_VERSION = 1
@@ -55,11 +58,39 @@ def side_bet_results_to_dict(results) -> List[Dict[str, Any]]:
     return items
 
 
-def allowed_actions_for_round(round_record: "AuthoritativeRound") -> List[str]:
+def _can_split(hand: Dict[str, Any], session_balance: int, extra_debits: int) -> bool:
+    """Return True if the hand is eligible to be split."""
+    # Must have exactly 2 cards
+    if len(hand["cards"]) != 2:
+        return False
+    # Already split-aces-locked hands cannot be split again
+    if hand.get("isSplitAcesLocked", False):
+        return False
+    # Cards must be the same value (10/J/Q/K all count as 10)
+    a, b = hand["cards"]
+    if not (a.rank == b.rank or split_value(a) == split_value(b)):
+        return False
+    # Player must have enough balance for the additional bet
+    if session_balance - extra_debits < hand["bet"]:
+        return False
+    return True
+
+
+def allowed_actions_for_round(round_record: "AuthoritativeRound", session_balance: int = 0) -> List[str]:
     if round_record.pending_insurance:
         return ["insurance-yes", "insurance-no"]
     if round_record.phase == "PLAY" and round_record.active_hand >= 0:
-        return ["hit", "stand", "double"]
+        actions = ["hit", "stand"]
+        hand = round_record.hands[round_record.active_hand]
+        # Double allowed on first 2 cards; ALLOW_DAS = False so no double after split
+        is_split_hand = hand.get("isSplitHand", False)
+        is_split_aces_locked = hand.get("isSplitAcesLocked", False)
+        if len(hand["cards"]) == 2 and not is_split_hand and not is_split_aces_locked:
+            actions.append("double")
+        # Split: same rank/value, not split-aces-locked, sufficient balance
+        if _can_split(hand, session_balance, round_record.extra_debits):
+            actions.append("split")
+        return actions
     if round_record.phase == "RESULT":
         return ["end-round"]
     return []
@@ -120,12 +151,12 @@ class AuthoritativeRound:
                 return index
         return -1
 
-    def snapshot(self) -> Dict[str, Any]:
+    def snapshot(self, session_balance: int = 0) -> Dict[str, Any]:
         snapshot = {
             "schemaVersion": ROUND_STATE_SCHEMA_VERSION,
             "phase": self.phase,
             "activeHand": self.active_hand,
-            "allowedActions": allowed_actions_for_round(self),
+            "allowedActions": allowed_actions_for_round(self, session_balance=session_balance),
             "dealerHand": [card_to_dict(card) for card in self.dealer_cards],
             "shoe": [card_to_dict(card) for card in self.shoe_cards],
             "hands": [
@@ -138,6 +169,9 @@ class AuthoritativeRound:
                     "done": hand["done"],
                     "doubled": hand["doubled"],
                     "sideBetResults": hand["sideBetResults"],
+                    "isSplitHand": hand.get("isSplitHand", False),
+                    "countsAsBlackjack": hand.get("countsAsBlackjack", True),
+                    "isSplitAcesLocked": hand.get("isSplitAcesLocked", False),
                 }
                 for hand in self.hands
             ],
@@ -148,7 +182,7 @@ class AuthoritativeRound:
         validate_snapshot_shape(snapshot)
         return snapshot
 
-    def as_round_payload(self) -> Dict[str, Any]:
+    def as_round_payload(self, session_balance: int = 0) -> Dict[str, Any]:
         return {
             "betID": self.bet_id,
             "amount": self.total_wagered,
@@ -159,7 +193,7 @@ class AuthoritativeRound:
             "active": self.active,
             "mode": self.mode,
             "event": self.last_event,
-            "state": self.snapshot(),
+            "state": self.snapshot(session_balance=session_balance),
         }
 
 
@@ -232,7 +266,7 @@ class MockBlackjackService:
         return {
             "balance": {"amount": session.balance, "currency": session.currency},
             "config": session.config(),
-            "round": session.round.as_round_payload() if session.round else None,
+            "round": session.round.as_round_payload(session_balance=session.balance) if session.round else None,
         }
 
     def balance(self, session_id: str) -> Dict[str, Any]:
@@ -330,6 +364,9 @@ class MockBlackjackService:
                 "done": False,
                 "doubled": False,
                 "sideBetResults": [],
+                "isSplitHand": False,
+                "countsAsBlackjack": True,
+                "isSplitAcesLocked": False,
             })
 
         session.balance -= amount
@@ -349,7 +386,7 @@ class MockBlackjackService:
         self._save()
         return {
             "balance": {"amount": session.balance, "currency": session.currency},
-            "round": round_record.as_round_payload(),
+            "round": round_record.as_round_payload(session_balance=session.balance),
         }
 
     def event(self, session_id: str, event_payload: str) -> Dict[str, Any]:
@@ -368,7 +405,7 @@ class MockBlackjackService:
                 "mode": session.round.mode,
                 "sequence": envelope.get("sequence"),
                 "event": event,
-                "state": session.round.snapshot(),
+                "state": session.round.snapshot(session_balance=session.balance),
                 "active": session.round.active,
             }),
         }
@@ -380,11 +417,12 @@ class MockBlackjackService:
         if session.round.phase != "RESULT":
             raise ValueError("Round is not complete")
         replay_key = str(session.round.bet_id)
+        final_balance = session.balance - session.round.extra_debits + session.round.total_returned
         session.history[replay_key] = {
             "event": replay_key,
-            "round": session.round.as_round_payload(),
+            "round": session.round.as_round_payload(session_balance=final_balance),
         }
-        session.balance = session.balance - session.round.extra_debits + session.round.total_returned
+        session.balance = final_balance
         session.round.active = False
         session.round = None
         self._save()
@@ -396,6 +434,37 @@ class MockBlackjackService:
         if not replay:
             raise ValueError("Replay event not found")
         return replay
+
+    def replay_by_event_id(self, event_id: str) -> Dict[str, Any]:
+        """Search all sessions for the given event ID and return the official
+        Stake Bet Replay response schema:
+        {
+            "payoutMultiplier": float | None,
+            "costMultiplier": float,
+            "state": { ...game-specific state... }
+        }
+        """
+        key = str(event_id)
+        for session in self.sessions.values():
+            entry = session.history.get(key)
+            if entry is not None:
+                round_payload = entry.get("round", {})
+                payout_multiplier = round_payload.get("payoutMultiplier")
+                state = round_payload.get("state") or {}
+
+                # Derive costMultiplier: actual cost vs. initial bet
+                # total_wagered reflects the full cost including doubles/insurance.
+                # For replay purposes costMultiplier is 1.0 (the player paid 1x
+                # the declared amount when the round was started; extra debits are
+                # already folded into payoutMultiplier by the RGS).
+                cost_multiplier = 1.0
+
+                return {
+                    "payoutMultiplier": float(payout_multiplier) if payout_multiplier is not None else None,
+                    "costMultiplier": cost_multiplier,
+                    "state": state,
+                }
+        raise ValueError(f"Replay event not found: {event_id}")
 
     def _validate_event_envelope(self, round_record: AuthoritativeRound, envelope: Dict[str, Any]) -> None:
         if not isinstance(envelope, dict):
@@ -425,7 +494,7 @@ class MockBlackjackService:
             return
         if event_type == "playerAction":
             action = event.get("action")
-            if action not in {"hit", "stand", "double"}:
+            if action not in {"hit", "stand", "double", "split"}:
                 raise ValueError("Unsupported player action")
             if "handIndex" in event and not isinstance(event.get("handIndex"), int):
                 raise ValueError("playerAction handIndex must be an integer")
@@ -504,6 +573,16 @@ class MockBlackjackService:
     def _deserialize_round(self, payload: Optional[Dict[str, Any]]) -> Optional[AuthoritativeRound]:
         if not payload:
             return None
+
+        def _deserialize_hand(hand: Dict[str, Any]) -> Dict[str, Any]:
+            deserialized = dict(hand)
+            deserialized["cards"] = [card_from_dict(card) for card in hand.get("cards", [])]
+            # Ensure split-related fields have defaults for backwards compatibility
+            deserialized.setdefault("isSplitHand", False)
+            deserialized.setdefault("countsAsBlackjack", True)
+            deserialized.setdefault("isSplitAcesLocked", False)
+            return deserialized
+
         return AuthoritativeRound(
             bet_id=int(payload["bet_id"]),
             mode=str(payload["mode"]),
@@ -511,13 +590,7 @@ class MockBlackjackService:
             initial_debit=int(payload["initial_debit"]),
             shoe_cards=[card_from_dict(card) for card in payload.get("shoe_cards", [])],
             dealer_cards=[card_from_dict(card) for card in payload.get("dealer_cards", [])],
-            hands=[
-                {
-                    **hand,
-                    "cards": [card_from_dict(card) for card in hand.get("cards", [])],
-                }
-                for hand in payload.get("hands", [])
-            ],
+            hands=[_deserialize_hand(hand) for hand in payload.get("hands", [])],
             phase=str(payload.get("phase", "PLAY")),
             active_hand=int(payload.get("active_hand", -1)),
             pending_insurance=payload.get("pending_insurance"),
@@ -541,7 +614,8 @@ class MockBlackjackService:
                 result = evaluate_21_plus_3(hand["cards"][0], hand["cards"][1], dealer_up, hand["sideBets"]["t"])
                 hand["sideBetResults"].append(side_bet_results_to_dict([result])[0])
 
-            player_blackjack = is_blackjack(hand["cards"])
+            counts_as_bj = hand.get("countsAsBlackjack", True)
+            player_blackjack = counts_as_bj and is_blackjack(hand["cards"])
             if player_blackjack and dealer_bj:
                 hand["result"] = "push"
                 hand["payout"] = hand["bet"]
@@ -602,6 +676,10 @@ class MockBlackjackService:
         elif action == "stand":
             hand["done"] = True
         elif action == "double":
+            if hand.get("isSplitHand", False):
+                raise ValueError("Double after split is not allowed")
+            if hand.get("isSplitAcesLocked", False):
+                raise ValueError("Cannot double a split-aces-locked hand")
             if session.balance - round_record.extra_debits < hand["bet"]:
                 raise ValueError("Insufficient balance for double")
             round_record.extra_debits += hand["bet"]
@@ -613,6 +691,79 @@ class MockBlackjackService:
                 hand["result"] = "bust"
                 hand["payout"] = 0
             hand["done"] = True
+        elif action == "split":
+            # Validate eligibility
+            if len(hand["cards"]) != 2:
+                raise ValueError("Can only split a hand with exactly 2 cards")
+            if hand.get("isSplitAcesLocked", False):
+                raise ValueError("Cannot split a split-aces-locked hand")
+            a, b = hand["cards"]
+            if not (a.rank == b.rank or split_value(a) == split_value(b)):
+                raise ValueError("Cards must be the same rank or value to split")
+            if session.balance - round_record.extra_debits < hand["bet"]:
+                raise ValueError("Insufficient balance for split")
+
+            splitting_aces = (a.rank == "A" and b.rank == "A")
+            original_bet = hand["bet"]
+
+            # Charge the extra bet
+            round_record.extra_debits += original_bet
+            round_record.total_wagered += original_bet
+
+            # Build the two new hands
+            new_card_a = session.shoe.draw()
+            new_card_b = session.shoe.draw()
+
+            hand_a = {
+                "cards": [a, new_card_a],
+                "bet": original_bet,
+                "sideBets": {"pp": 0, "t": 0},
+                "result": None,
+                "payout": 0,
+                "done": splitting_aces,  # split aces get exactly one card and are locked
+                "doubled": False,
+                "sideBetResults": [],
+                "isSplitHand": True,
+                "countsAsBlackjack": False,
+                "isSplitAcesLocked": splitting_aces,
+            }
+            hand_b = {
+                "cards": [b, new_card_b],
+                "bet": original_bet,
+                "sideBets": {"pp": 0, "t": 0},
+                "result": None,
+                "payout": 0,
+                "done": splitting_aces,
+                "doubled": False,
+                "sideBetResults": [],
+                "isSplitHand": True,
+                "countsAsBlackjack": False,
+                "isSplitAcesLocked": splitting_aces,
+            }
+
+            # Replace the original hand with the two split hands
+            round_record.hands[hand_index:hand_index + 1] = [hand_a, hand_b]
+
+            # Update shoe snapshot and active hand
+            round_record.shoe_cards = list(session.shoe.cards)
+            round_record.active_hand = round_record.next_active_hand()
+            if round_record.active_hand >= 0:
+                round_record.phase = "PLAY"
+            else:
+                # All hands done (e.g. split aces with no further play)
+                round_record.dealer_cards = dealer_play(round_record.dealer_cards, session.shoe)
+                for h in round_record.hands:
+                    if h["result"] is None:
+                        hs = HandState(cards=list(h["cards"]), bet=h["bet"],
+                                       counts_as_blackjack=h.get("countsAsBlackjack", True))
+                        result, payout = resolve_hand_state(hs, round_record.dealer_cards)
+                        h["result"] = result.value if isinstance(result, HandResult) else str(result)
+                        h["payout"] = payout
+                round_record.phase = "RESULT"
+                round_record.total_returned = self._total_returned(round_record)
+                round_record.message = build_message(round_record.hands)
+                round_record.shoe_cards = list(session.shoe.cards)
+            return
         else:
             raise ValueError("Unsupported player action")
 
@@ -625,7 +776,9 @@ class MockBlackjackService:
         round_record.dealer_cards = dealer_play(round_record.dealer_cards, session.shoe)
         for hand in round_record.hands:
             if hand["result"] is None:
-                result, payout = resolve_hand(hand["cards"], round_record.dealer_cards, hand["bet"])
+                hs = HandState(cards=list(hand["cards"]), bet=hand["bet"],
+                               counts_as_blackjack=hand.get("countsAsBlackjack", True))
+                result, payout = resolve_hand_state(hs, round_record.dealer_cards)
                 hand["result"] = result.value if isinstance(result, HandResult) else str(result)
                 hand["payout"] = payout
 

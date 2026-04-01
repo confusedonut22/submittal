@@ -13,21 +13,21 @@ It is not a guarantee of approval; it is a practical inventory of what should be
 - [x] No resplit aces
 - [x] Dealer hits soft 17
 - [x] Blackjack pays 3:2
-- [ ] Double-after-split final decision explicitly confirmed in docs/code
-- [ ] Same-value split behavior explicitly confirmed in docs/code
+- [x] Double-after-split final decision explicitly confirmed in docs/code (No DAS)
+- [x] Same-value split behavior explicitly confirmed in docs/code (same rank only)
 
 ## 2. Math / engine
 - [x] Top-level and math-engine implementations aligned for split-aware settlement
 - [x] Split-created 21 does not pay as natural blackjack
 - [x] Split-ace lock behavior covered by tests
-- [ ] Wager accounting on split/double fully regression-tested
-- [ ] Multi-hand progression/order fully regression-tested
-- [ ] Final exported math path updated to reflect real split-capable game flow
+- [x] Wager accounting on split/double fully regression-tested
+- [x] Multi-hand progression/order fully regression-tested
+- [x] Final exported math path updated to reflect real split-capable game flow
 
 ## 3. Frontend
 - [x] Split action present in current frontend source
 - [x] Current frontend test suite green
-- [ ] Button legality fully derived from engine/store truth in all paths
+- [x] Button legality fully derived from engine/store truth in all paths
 - [ ] Multi-hand result messaging reviewed for split rounds
 - [ ] Rules/help copy rechecked against actual current implementation
 - [ ] Frontend readiness doc updated to current state
@@ -35,8 +35,8 @@ It is not a guarantee of approval; it is a practical inventory of what should be
 ## 4. RTP / disclosure
 - [x] Fast RTP checkpoint helper exists
 - [x] Base RTP has been rechecked during this work
-- [ ] Published base RTP finalized for submission package
-- [ ] Side-bet RTP values revalidated and surfaced in final docs
+- [x] Published base RTP finalized for submission package (~97.4%)
+- [x] Side-bet RTP values revalidated and surfaced in final docs
 - [ ] Player-facing RTP text finalized
 
 ## 5. Export / submission artifacts

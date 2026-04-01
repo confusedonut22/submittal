@@ -1,9 +1,10 @@
 """
-Deterministic Stake-style math export scaffold for Degen Blackjack.
+Deterministic Stake-style math export for Degen Blackjack.
 
-This is draft scaffolding, not a final Stake submission bundle.
-It emits reproducible round records, a weights CSV, and an index.json
-that documents the current assumptions. Compression to .jsonl.zst is
+Emits reproducible round records, a weights CSV, and an index.json
+that documents the current assumptions. Supports split-capable rounds
+including pair splitting with basic strategy, locked split aces, and
+no double after split (DAS=False). Compression to .jsonl.zst is
 only performed when the optional `zstandard` dependency is installed.
 """
 
@@ -37,14 +38,41 @@ def card_token(card: Card) -> str:
     return f"{card.rank}{card.suit[0]}"
 
 
-def basic_strategy_action(player_cards: List[Card], dealer_up_card: Card) -> str:
-    pv = hand_value(player_cards)
-    soft = is_soft(player_cards)
-    can_double = len(player_cards) == 2
-
+def basic_strategy_action(
+    player_cards: List[Card],
+    dealer_up_card: Card,
+    *,
+    allow_split: bool = True,
+    allow_double: bool = True,
+) -> str:
     dv = dealer_up_card.value
     if dealer_up_card.rank in ("J", "Q", "K"):
         dv = 10
+
+    # ── Pair split check (initial 2 cards only) ───────────────────────────
+    if allow_split and len(player_cards) == 2 and player_cards[0].rank == player_cards[1].rank:
+        pair_rank = player_cards[0].rank
+
+        # Always split A,A and 8,8
+        if pair_rank in ("A", "8"):
+            return "split"
+
+        # Never split 4,4 or 5,5 or 10-value pairs (10, J, Q, K)
+        if pair_rank in ("4", "5", "10", "J", "Q", "K"):
+            pass  # fall through to hard-total strategy
+
+        # Split 2,2 / 3,3 / 6,6 / 7,7 vs dealer 2-7
+        elif pair_rank in ("2", "3", "6", "7") and 2 <= dv <= 7:
+            return "split"
+
+        # Split 9,9 vs dealer 2-6 or 8-9
+        elif pair_rank == "9" and dv in (2, 3, 4, 5, 6, 8, 9):
+            return "split"
+
+    # ── Standard hard/soft strategy ──────────────────────────────────────
+    pv = hand_value(player_cards)
+    soft = is_soft(player_cards)
+    can_double = allow_double and len(player_cards) == 2
 
     if pv >= 17:
         return "stand"
@@ -148,6 +176,7 @@ def play_round_record(
 
     evaluate_initial_resolution(hand, state.dealer_cards)
     if hand.result is not None:
+        # Blackjack or dealer blackjack — no further player action
         events.append(
             {
                 "type": "initialResolution",
@@ -157,21 +186,109 @@ def play_round_record(
         )
         state = complete_round(state, shoe)
     else:
-        while hand.result is None:
-            action = basic_strategy_action(hand.cards, state.dealer_cards[0])
-            if action == "stand":
-                events.append({"type": "playerAction", "action": "stand"})
-                break
-            if action == "double":
-                state.total_wagered += hand.bet
-                hand.bet *= 2
-                hand.doubled = True
+        # Check for a split on the initial hand
+        action = basic_strategy_action(hand.cards, state.dealer_cards[0])
+        if action == "split":
+            from engine import split_hand as engine_split_hand
+
+            success, split_hands = engine_split_hand(state, 0, shoe)
+            # split_hand already draws the second card for each child and
+            # increments state.total_wagered by the original bet amount.
+
+            splitting_aces = hand.cards[0].rank == "A"
+            events.append(
+                {
+                    "type": "playerAction",
+                    "action": "split",
+                    "splitAces": splitting_aces,
+                    "hands": [
+                        {
+                            "handIndex": i,
+                            "cards": [card_token(c) for c in sh.cards],
+                        }
+                        for i, sh in enumerate(split_hands)
+                    ],
+                }
+            )
+
+            # Play each split hand independently
+            for hand_idx, split_hand_state in enumerate(split_hands):
+                # Split aces get exactly one card each — already done by engine_split_hand
+                if split_hand_state.from_split_aces:
+                    # Locked; no further actions
+                    if hand_value(split_hand_state.cards) > 21:
+                        split_hand_state.result = HandResult.BUST
+                        split_hand_state.payout = 0
+                    continue
+
+                # Play non-ace split hand with basic strategy (no DAS, no re-split)
+                while split_hand_state.result is None:
+                    split_action = basic_strategy_action(
+                        split_hand_state.cards,
+                        state.dealer_cards[0],
+                        allow_split=False,   # no re-split
+                        allow_double=False,  # DAS = False
+                    )
+                    if split_action == "stand":
+                        events.append(
+                            {
+                                "type": "playerAction",
+                                "action": "stand",
+                                "handIndex": hand_idx,
+                            }
+                        )
+                        break
+
+                    drawn = shoe.draw()
+                    split_hand_state.cards.append(drawn)
+                    events.append(
+                        {
+                            "type": "playerAction",
+                            "action": "hit",
+                            "handIndex": hand_idx,
+                            "card": card_token(drawn),
+                            "value": hand_value(split_hand_state.cards),
+                        }
+                    )
+                    if hand_value(split_hand_state.cards) > 21:
+                        split_hand_state.result = HandResult.BUST
+                        split_hand_state.payout = 0
+                        break
+
+            state = complete_round(state, shoe)
+
+        else:
+            # Standard single-hand play (hit / stand / double)
+            while hand.result is None:
+                action = basic_strategy_action(hand.cards, state.dealer_cards[0])
+                if action == "stand":
+                    events.append({"type": "playerAction", "action": "stand"})
+                    break
+                if action == "double":
+                    state.total_wagered += hand.bet
+                    hand.bet *= 2
+                    hand.doubled = True
+                    drawn = shoe.draw()
+                    hand.cards.append(drawn)
+                    events.append(
+                        {
+                            "type": "playerAction",
+                            "action": "double",
+                            "card": card_token(drawn),
+                            "value": hand_value(hand.cards),
+                        }
+                    )
+                    if hand_value(hand.cards) > 21:
+                        hand.result = HandResult.BUST
+                        hand.payout = 0
+                    break
+
                 drawn = shoe.draw()
                 hand.cards.append(drawn)
                 events.append(
                     {
                         "type": "playerAction",
-                        "action": "double",
+                        "action": "hit",
                         "card": card_token(drawn),
                         "value": hand_value(hand.cards),
                     }
@@ -179,24 +296,9 @@ def play_round_record(
                 if hand_value(hand.cards) > 21:
                     hand.result = HandResult.BUST
                     hand.payout = 0
-                break
+                    break
 
-            drawn = shoe.draw()
-            hand.cards.append(drawn)
-            events.append(
-                {
-                    "type": "playerAction",
-                    "action": "hit",
-                    "card": card_token(drawn),
-                    "value": hand_value(hand.cards),
-                }
-            )
-            if hand_value(hand.cards) > 21:
-                hand.result = HandResult.BUST
-                hand.payout = 0
-                break
-
-        state = complete_round(state, shoe)
+            state = complete_round(state, shoe)
 
     events.append(
         {
@@ -206,18 +308,32 @@ def play_round_record(
         }
     )
 
+    # Build settlement summary covering all hands in the round
+    hand_settlements = [
+        {
+            "handIndex": i,
+            "handResult": h.result.value if h.result else None,
+            "handPayout": h.payout,
+            "isSplitHand": h.is_split_hand,
+        }
+        for i, h in enumerate(state.player_hands)
+    ]
+
     events.append(
         {
             "type": "roundSettlement",
-            "handResult": hand.result.value if hand.result else None,
-            "handPayout": hand.payout,
+            "hands": hand_settlements,
             "totalWagered": state.total_wagered,
             "totalReturned": state.total_returned,
             "insuranceTaken": state.insurance_taken,
         }
     )
 
-    payout_multiplier = int(round((state.total_returned / state.total_wagered) * 100)) if state.total_wagered else 0
+    payout_multiplier = (
+        round(state.total_returned / state.total_wagered, 6)
+        if state.total_wagered > 0
+        else 0.0
+    )
 
     return {
         "events": events,
@@ -262,21 +378,27 @@ def simulate_bundle(
 
 
 def collapse_records(records: Iterable[Dict]) -> List[Dict]:
-    weights = Counter(record["id"] for record in records)
+    # Materialise to a list so we can iterate twice
+    records_list = list(records)
+    weights = Counter(record["id"] for record in records_list)
+    total_rounds = sum(weights.values())
+
     unique: Dict[str, Dict] = {}
-    for record in records:
+    for record in records_list:
         unique.setdefault(record["id"], record)
 
     collapsed = []
     for simulation_number, record_id in enumerate(sorted(unique.keys()), start=1):
         record = unique[record_id]
+        # Normalize to probability of selection so probabilities sum to 1.0
+        probability = weights[record_id] / total_rounds if total_rounds > 0 else 0.0
         collapsed.append(
             {
                 "id": simulation_number,
                 "recordId": record_id,
                 "events": record["events"],
                 "payoutMultiplier": record["payoutMultiplier"],
-                "probability": weights[record_id],
+                "probability": round(probability, 10),
                 "totalWagered": record["totalWagered"],
                 "totalReturned": record["totalReturned"],
             }
@@ -349,13 +471,13 @@ def write_bundle(out_dir: Path, records: List[Dict]) -> Dict[str, Path]:
         json.dump(
             {
                 "bundleVersion": 1,
-                "draft": True,
+                "draft": False,
                 "notes": [
-                    "Draft Stake-style scaffold for Degen Blackjack.",
+                    "Stake-style math export for Degen Blackjack with full split support.",
                     "simulation_number is a sequential integer id for each unique round record.",
-                    "round_probability currently uses deterministic simulation frequency counts, not final published math weights.",
-                    "payoutMultiplier is normalized against total round wager, including doubles and insurance when present.",
-                    "Current scaffold only exports single-hand round records and is not yet the final split-capable submission bundle.",
+                    "round_probability is a normalized probability (frequency / total_rounds) so all weights sum to 1.0.",
+                    "payoutMultiplier is a float ratio of total_returned / total_wagered (e.g. 2.0 for a 2:1 payout), not a percentage.",
+                    "Supports split rounds: A,A and 8,8 always split; pair strategy per basic strategy; split aces receive one card each; DAS=False; no re-splitting.",
                     "Side bets should be disclosed and validated separately from the base-game RTP.",
                     "Compression to .jsonl.zst requires the optional zstandard dependency.",
                 ],
