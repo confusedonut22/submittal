@@ -7,10 +7,10 @@
 
 ## 1. Engine / gameplay correctness
 - [~] Add split-capable frontend/runtime hand state
-- [ ] Add split-capable Python math engine hand state
-- [ ] Ensure split 21 does not pay natural blackjack
-- [ ] Enforce split-ace one-card rule
-- [ ] Prevent resplit aces
+- [x] Add split-capable Python math engine hand state
+- [x] Ensure split 21 does not pay natural blackjack
+- [x] Enforce split-ace one-card rule
+- [x] Prevent resplit aces
 - [ ] Validate total wager changes on split and double
 - [ ] Ensure multi-hand progression/order is correct
 - [ ] Decide/validate DAS behavior against RTP target
@@ -24,25 +24,25 @@
 - [ ] Update frontend readiness doc
 
 ## 3. Math / RTP / export
-- [ ] Align Python math engine with split-capable rules
-- [ ] Add fast RTP checkpoint workflow
-- [ ] Re-check base RTP against < 98.0% target after rule changes
-- [ ] Distinguish draft export scaffolds from final submission artifacts
+- [x] Align Python math engine with split-capable rules
+- [x] Add fast RTP checkpoint workflow
+- [x] Re-check base RTP against < 98.0% target after rule changes
+- [x] Distinguish draft export scaffolds from final submission artifacts
 - [ ] Update stake export assumptions to match real blackjack flow
 - [ ] Keep side-bet math/docs aligned with paytables
 
 ## 4. Tests
 - [~] Keep existing frontend tests green
-- [ ] Add split creation test(s)
-- [ ] Add split-21-not-blackjack test(s)
-- [ ] Add split-ace-lock test(s)
+- [x] Add split creation test(s)
+- [x] Add split-21-not-blackjack test(s)
+- [x] Add split-ace-lock test(s)
 - [ ] Add wager accounting test(s)
 - [ ] Add math-side regression tests where needed
 
 ## 5. Docs / submission
 - [x] Lock rules direction in docs
 - [x] Add repo-local approval skills
-- [ ] Commit repo-local skills
+- [x] Commit repo-local skills
 - [ ] Keep game spec current with actual implementation
 - [ ] Produce concise submission checklist
 - [ ] Prepare final approval artifact inventory
