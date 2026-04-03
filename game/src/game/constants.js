@@ -29,7 +29,6 @@ import chip5    from "../assets/chip_5.png";
 import chip25   from "../assets/chip_25.png";
 import chip100  from "../assets/chip_100.png";
 import logo     from "../assets/chad_labs_logo.png";
-import jackSpadesCustom from "../assets/jack_spades_sidebetbj.png";
 
 export const CHIP_IMAGES = {
   500_000:     chip50c,
@@ -39,7 +38,3 @@ export const CHIP_IMAGES = {
   100_000_000: chip100,
 };
 export const LOGO_IMAGE = logo;
-
-export const CUSTOM_CARD_FACES = {
-  "J_spades": jackSpadesCustom,
-};

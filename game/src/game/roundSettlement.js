@@ -1,7 +1,7 @@
-import { evaluate21Plus3, evaluatePerfectPairs, handValue, isBlackjack, resolveHandState } from "./engine.js";
+import { evaluate21Plus3, evaluatePerfectPairs, handValue, isBlackjack, resolveHand } from "./engine.js";
 
-export function getInsuranceAmount(betAmount) {
-  return Math.floor(betAmount / 2);
+export function getInsuranceAmount(totalMainBet) {
+  return Math.floor(totalMainBet / 2);
 }
 
 function sideBetResultsForHand(hand, dealerUpCard) {
@@ -90,7 +90,7 @@ export function settleDealerHands(hands, dealerCards) {
   const settledHands = hands.map((hand) => {
     if (hand.result) return hand;
 
-    const { result, payout: handPayout } = resolveHandState(hand, dealerCards, hand.bet);
+    const { result, payout: handPayout } = resolveHand(hand.cards, dealerCards, hand.bet);
     if (handPayout > 0) payout += handPayout;
 
     return {

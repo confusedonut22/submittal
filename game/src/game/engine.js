@@ -77,164 +77,6 @@ export function isRed(card) {
   return RED_SUITS.has(card.suit);
 }
 
-let nextHandId = 1;
-
-export function resetHandIdSequence() {
-  nextHandId = 1;
-}
-
-export function createHandId(prefix = "hand") {
-  const id = `${prefix}-${nextHandId}`;
-  nextHandId += 1;
-  return id;
-}
-
-export function cardValueForSplit(card) {
-  return Math.min(10, RANK_VALUES[card.rank]);
-}
-
-export function canSplitHand(hand, rules = {}) {
-  if (!hand || hand.done || hand.doubled) return false;
-  if ((hand.cards?.length ?? 0) !== 2) return false;
-  if (hand.isSplitAcesLocked) return false;
-  const [a, b] = hand.cards;
-  const allowSameValueSplit = rules.allowSameValueSplit !== false;
-  if (a.rank === b.rank) return true;
-  if (!allowSameValueSplit) return false;
-  return cardValueForSplit(a) === cardValueForSplit(b);
-}
-
-// Locked ruleset: double on hard 9, 10, 11 only (no DAS, no soft doubling)
-// Blackjack pays 7:5 — primary RTP lever keeping base game ~97.9%
-const DOUBLE_ON_HARD = new Set([9, 10, 11]);
-
-export function canDoubleHand(hand, balance = Number.POSITIVE_INFINITY, rules = {}) {
-  if (!hand || hand.done || hand.doubled) return false;
-  if ((hand.cards?.length ?? 0) !== 2) return false;
-  if (balance < hand.bet) return false;
-  if (hand.isSplitAcesLocked) return false;
-  if (hand.isSplitHand) return false; // no DAS
-  const total = handValue(hand.cards);
-  const soft = isSoft(hand.cards);
-  if (soft) return false; // no soft doubling
-  return DOUBLE_ON_HARD.has(total);
-}
-
-export function canHitHand(hand) {
-  if (!hand || hand.done) return false;
-  if (hand.isSplitAcesLocked) return false;
-  return !isBust(hand.cards);
-}
-
-export function createHandState({
-  bet,
-  sb = { pp: 0, t: 0 },
-  cards = [],
-  id = createHandId(),
-  parentId = null,
-  splitRootId = null,
-  splitDepth = 0,
-  isSplitHand = false,
-  fromSplitAces = false,
-  countsAsBlackjack = true,
-} = {}) {
-  return {
-    id,
-    parentId,
-    splitRootId: splitRootId ?? id,
-    splitDepth,
-    cards,
-    bet,
-    baseBet: bet,
-    sb,
-    result: null,
-    message: "",
-    payout: 0,
-    done: false,
-    doubled: false,
-    sideBetResults: [],
-    stood: false,
-    busted: false,
-    surrendered: false,
-    isSplitHand,
-    fromSplitAces,
-    isSplitAcesLocked: false,
-    countsAsBlackjack,
-  };
-}
-
-export function resolveHandState(hand, dealerCards, betAmount = hand.bet) {
-  const pv = handValue(hand.cards);
-  const dv = handValue(dealerCards);
-  const pBJ = hand.countsAsBlackjack !== false && isBlackjack(hand.cards);
-  const dBJ = isBlackjack(dealerCards);
-
-  if (pBJ && dBJ) return { result: "push", payout: betAmount };
-  if (pBJ) return { result: "blackjack", payout: betAmount + Math.floor(betAmount * BJ_MULTIPLIER) };
-  if (dBJ) return { result: "lose", payout: 0 };
-  if (pv > 21) return { result: "bust", payout: 0 };
-  if (dv > 21) return { result: "win", payout: betAmount * 2 };
-  if (pv > dv) return { result: "win", payout: betAmount * 2 };
-  if (pv === dv) return { result: "push", payout: betAmount };
-  return { result: "lose", payout: 0 };
-}
-
-export function splitHandAtIndex(hands, handIndex, shoe, balance = Number.POSITIVE_INFINITY, rules = {}) {
-  const hand = hands[handIndex];
-  if (!canSplitHand(hand, rules)) {
-    return { hands, success: false, cost: 0 };
-  }
-  if (balance < hand.bet) {
-    return { hands, success: false, cost: 0 };
-  }
-
-  const [firstCard, secondCard] = hand.cards;
-  const rootId = hand.splitRootId ?? hand.id;
-  const nextDepth = (hand.splitDepth ?? 0) + 1;
-  const splittingAces = firstCard.rank === "A" && secondCard.rank === "A";
-
-  const firstHand = createHandState({
-    bet: hand.bet,
-    sb: { ...hand.sb },
-    cards: [firstCard, drawCard(shoe)],
-    parentId: hand.id,
-    splitRootId: rootId,
-    splitDepth: nextDepth,
-    isSplitHand: true,
-    fromSplitAces: splittingAces,
-    countsAsBlackjack: false,
-  });
-  const secondHand = createHandState({
-    bet: hand.bet,
-    sb: { pp: 0, t: 0 },
-    cards: [secondCard, drawCard(shoe)],
-    parentId: hand.id,
-    splitRootId: rootId,
-    splitDepth: nextDepth,
-    isSplitHand: true,
-    fromSplitAces: splittingAces,
-    countsAsBlackjack: false,
-  });
-
-  if (splittingAces) {
-    firstHand.isSplitAcesLocked = true;
-    secondHand.isSplitAcesLocked = true;
-    firstHand.stood = true;
-    secondHand.stood = true;
-    firstHand.done = true;
-    secondHand.done = true;
-  }
-
-  const nextHands = [...hands];
-  nextHands.splice(handIndex, 1, firstHand, secondHand);
-  return {
-    hands: nextHands,
-    success: true,
-    cost: hand.bet,
-    createdHands: [firstHand, secondHand],
-  };
-}
-
 // ─── SIDE BET EVALUATION ───
 
 export function evaluatePerfectPairs(card1, card2, betAmount) {
@@ -287,7 +129,19 @@ export function evaluate21Plus3(player1, player2, dealerUp, betAmount) {
  * Results: "win" | "blackjack" | "push" | "lose" | "bust"
  */
 export function resolveHand(playerCards, dealerCards, betAmount) {
-  return resolveHandState({ cards: playerCards, countsAsBlackjack: true, bet: betAmount }, dealerCards, betAmount);
+  const pv = handValue(playerCards);
+  const dv = handValue(dealerCards);
+  const pBJ = isBlackjack(playerCards);
+  const dBJ = isBlackjack(dealerCards);
+
+  if (pBJ && dBJ) return { result: "push",      payout: betAmount };
+  if (pBJ)        return { result: "blackjack",  payout: betAmount + Math.floor(betAmount * BJ_MULTIPLIER) };
+  if (dBJ)        return { result: "lose",       payout: 0 };
+  if (pv > 21)    return { result: "bust",       payout: 0 };
+  if (dv > 21)    return { result: "win",        payout: betAmount * 2 };
+  if (pv > dv)    return { result: "win",        payout: betAmount * 2 };
+  if (pv === dv)  return { result: "push",       payout: betAmount };
+  return           { result: "lose",             payout: 0 };
 }
 
 // ─── BASIC STRATEGY (for auto-play) ───

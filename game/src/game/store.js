@@ -4,8 +4,7 @@
 import { writable, derived, get } from "svelte/store";
 import {
   makeShoe, drawCard, handValue, isSoft, isBlackjack,
-  basicStrategyAction, createHandState, canDoubleHand, canHitHand, canSplitHand,
-  splitHandAtIndex, resetHandIdSequence,
+  basicStrategyAction,
 } from "./engine.js";
 import {
   getInsuranceAmount,
@@ -15,7 +14,7 @@ import {
 import { randomFact, getBadBeat } from "./content.js";
 import { playCardSnap, playDealSwoosh } from "./audio.js";
 import {
-  PHASE, SPEEDS, MONEY_SCALE, STARTING_BALANCE,
+  PHASE, SPEEDS, MONEY_SCALE, STARTING_BALANCE, RANK_VALUES,
 } from "./constants.js";
 import { replayMode } from "./session.js";
 import { sessionQuery } from "./session.js";
@@ -27,7 +26,6 @@ import {
 import { endRound, fetchBalance, playRound, postRoundEvent } from "./rgsClient.js";
 import { buildStakeEventPayload } from "./stakeRound.js";
 import { buildRoundStateSnapshot, canHydrateRoundState } from "./stakeRoundState.js";
-import { findNextActive } from "./progression.js";
 
 // ─── STATE ───
 
@@ -100,11 +98,21 @@ export const canDeal = derived(
 
 // ─── HELPERS ───
 
-function makeHand(bet = MONEY_SCALE, existingSB = null) {
-  return createHandState({
+function makeHand(bet = MONEY_SCALE, existingSB = null, isSplit = false) {
+  return {
+    cards: [],
     bet,
+    baseBet: isSplit ? 0 : bet,
     sb: existingSB ?? { pp: 0, t: 0 },
-  });
+    result: null,
+    message: "",
+    payout: 0,
+    done: false,
+    doubled: false,
+    sideBetResults: [],
+    isSplit,
+    isAceSplit: false,
+  };
 }
 
 function getSp() {
@@ -233,6 +241,13 @@ async function runAutoLoop() {
   }
 
   scheduleAutoLoop(sp.draw);
+}
+
+function findNextActive(hs) {
+  for (let i = hs.length - 1; i >= 0; i--) {
+    if (!hs[i].done) return i;
+  }
+  return -1;
 }
 
 function hasStakeSession() {
@@ -454,7 +469,7 @@ export function addSlot() {
   const $numSlots = get(numSlots);
   const $maxHands = get(maxHands);
   const $phase    = get(phase);
-  if ($numSlots >= $maxHands || $phase !== PHASE.BET) return;
+  if ($numSlots >= $maxHands || ($phase !== PHASE.BET && $phase !== PHASE.RESULT)) return;
   numSlots.update(n => n + 1);
   hands.update(hs => {
     const baseBet = hs[0]?.bet ?? MONEY_SCALE;
@@ -464,7 +479,7 @@ export function addSlot() {
 
 export function removeSlot(idx) {
   if (get(replayMode)) return;
-  if (get(numSlots) <= 1 || get(phase) !== PHASE.BET) return;
+  if (get(numSlots) <= 1 || (get(phase) !== PHASE.BET && get(phase) !== PHASE.RESULT)) return;
   numSlots.update(n => n - 1);
   hands.update(hs => hs.filter((_, i) => i !== idx));
 }
@@ -552,7 +567,6 @@ export function clearBet(idx) {
 
 export function newRound() {
   if (get(replayMode)) return;
-  resetHandIdSequence();
   phase.set(PHASE.BET);
   dealerHand.set([]);
   message.set("");
@@ -561,7 +575,15 @@ export function newRound() {
   fact.set(randomFact());
   rgsError.set("");
   rgsEventSeq.set(0);
-  hands.update(hs => hs.map(h => makeHand(h.baseBet ?? h.bet, { ...h.sb })));
+  hands.update(hs => {
+    // Remove ephemeral split hands; keep only original hands
+    const originals = hs.filter(h => !h.isSplit);
+    const base = originals.length > 0 ? originals : hs.slice(0, 1);
+    const fresh = base.map(h => makeHand(h.baseBet ?? h.bet, { ...h.sb }));
+    // Sync numSlots to the number of original hands
+    numSlots.set(fresh.length);
+    return fresh;
+  });
 }
 
 export async function deal() {
@@ -569,6 +591,7 @@ export async function deal() {
   const $hands   = get(hands);
   const $balance = get(balance);
   const $tc      = get(totalCost);
+  const $mt      = get(totalMainBet);
   const $auto    = get(autoPlay);
   const sp       = getSp();
 
@@ -601,7 +624,6 @@ export async function deal() {
   phase.set(PHASE.DEAL);
 
   // Reset hands
-  resetHandIdSequence();
   const freshHands = $hands.map(h => ({ ...makeHand(h.bet, { ...h.sb }), cards: [] }));
 
   // Draw cards from shoe
@@ -626,79 +648,53 @@ export async function deal() {
     });
 
     const dealerBJ = isBlackjack(dealerCards);
-    const insuranceOffers = freshHands.map((hand, handIndex) => ({
-      handIndex,
-      amount: getInsuranceAmount(hand.bet),
-      accepted: false,
-    }));
+    const insuranceAmount = getInsuranceAmount($mt);
 
     // Insurance prompt
     if (dealerCards[0].rank === "A" && !$auto) {
-      pending.set({ dealerCards, freshHands, dealerBJ, insuranceOffers });
+      pending.set({ dealerCards, freshHands, dealerBJ, insuranceAmount });
       phase.set(PHASE.INS);
     } else {
-      resolveInitial(dealerCards, freshHands, insuranceOffers);
+      resolveInitial(dealerCards, freshHands, false, insuranceAmount);
     }
   }, $auto ? sp.deal : 350);
 }
 
-export function takeInsurance(handIndex, take) {
+export function takeInsurance(take, customAmount = null) {
   if (get(replayMode)) return;
   const $pend = get(pending);
   if (!$pend) return;
-
-  const offers = ($pend.insuranceOffers ?? []).map((offer) =>
-    offer.handIndex === handIndex ? { ...offer, accepted: Boolean(take) } : offer
-  );
-
-  pending.set({ ...$pend, insuranceOffers: offers });
-
-  const hasRemainingChoice = offers.some((offer) => offer.accepted === false && offer.amount > 0 && !$pend.dealerBJ);
-  const unanswered = offers.some((offer) => offer.accepted === false && offer.amount > 0);
-
-  if (unanswered && !$pend.dealerBJ) return;
-
-  pending.set(null);
-
+  const effectiveAmount = customAmount !== null ? customAmount : $pend.insuranceAmount;
   if (hasStakeSession()) {
+    pending.set(null);
     emitRoundEvent({
       type: "insuranceDecision",
-      offers: offers.map((offer) => ({
-        handIndex: offer.handIndex,
-        accepted: offer.accepted,
-        amount: offer.accepted ? offer.amount : 0,
-      })),
+      accepted: Boolean(take),
+      amount: take ? effectiveAmount : 0,
     }).then(() => {
       if (get(phase) === PHASE.RESULT) requestEndRound();
     });
     return;
   }
-
-  const totalInsurance = offers
-    .filter((offer) => offer.accepted)
-    .reduce((sum, offer) => sum + offer.amount, 0);
-
-  if (totalInsurance > 0 && get(balance) >= totalInsurance) {
-    balance.update((b) => b - totalInsurance);
+  pending.set(null);
+  const accepted = take && effectiveAmount > 0 && get(balance) >= effectiveAmount;
+  if (accepted) {
+    balance.update(b => b - effectiveAmount);
   }
-
   emitRoundEvent({
     type: "insuranceDecision",
-    offers: offers.map((offer) => ({
-      handIndex: offer.handIndex,
-      accepted: offer.accepted,
-      amount: offer.accepted ? offer.amount : 0,
-    })),
+    accepted,
+    amount: accepted ? effectiveAmount : 0,
   });
-
   resolveInitial(
     $pend.dealerCards,
     $pend.freshHands,
-    offers
+    accepted,
+    effectiveAmount
   );
 }
 
-function resolveInitial(dealerCards, hs, insuranceOffers = []) {
+function resolveInitial(dealerCards, hs, tookInsurance, insuranceAmount) {
   const {
     hands: updated,
     sideBetPayout,
@@ -706,13 +702,8 @@ function resolveInitial(dealerCards, hs, insuranceOffers = []) {
     dealerBJ,
   } = settleImmediateHands(hs, dealerCards);
 
-  const acceptedInsurance = insuranceOffers.filter((offer) => offer.accepted);
-  const insurancePayout = dealerBJ
-    ? acceptedInsurance.reduce((sum, offer) => sum + (offer.amount * 3), 0)
-    : 0;
-
-  if (insurancePayout > 0) {
-    balance.update(b => b + insurancePayout);
+  if (tookInsurance && dealerBJ && insuranceAmount > 0) {
+    balance.update(b => b + (insuranceAmount * 3));
   }
   if (sideBetPayout > 0) balance.update(b => b + sideBetPayout);
   if (immediatePayout > 0) balance.update(b => b + immediatePayout);
@@ -731,12 +722,8 @@ function resolveInitial(dealerCards, hs, insuranceOffers = []) {
   emitRoundEvent({
     type: "initialResolution",
     dealerBlackjack: dealerBJ,
-    insuranceOffers: insuranceOffers.map((offer) => ({
-      handIndex: offer.handIndex,
-      accepted: offer.accepted,
-      amount: offer.accepted ? offer.amount : 0,
-    })),
-    insurancePayout,
+    insuranceTaken: tookInsurance,
+    insuranceAmount: tookInsurance ? insuranceAmount : 0,
     immediatePayout,
     hands: updated.map((hand, handIndex) => ({
       handIndex,
@@ -748,7 +735,7 @@ function resolveInitial(dealerCards, hs, insuranceOffers = []) {
 
   hands.set(updated);
 
-  const nx = findNextActive(updated, -1);
+  const nx = findNextActive(updated);
   if (nx >= 0) {
     activeHand.set(nx);
     phase.set(PHASE.PLAY);
@@ -760,15 +747,12 @@ function resolveInitial(dealerCards, hs, insuranceOffers = []) {
 export function hit() {
   if (get(replayMode)) return;
   const $actH = get(activeHand);
-  const current = get(hands)[$actH];
-  if (!canHitHand(current)) return;
   if (hasStakeSession()) {
     playCardSnap();
     emitRoundEvent({
       type: "playerAction",
       action: "hit",
       handIndex: $actH,
-      handId: current?.id,
     }).then(() => {
       if (get(phase) === PHASE.RESULT) requestEndRound();
     });
@@ -782,7 +766,6 @@ export function hit() {
     type: "playerAction",
     action: "hit",
     handIndex: $actH,
-    handId: current?.id,
     card,
   });
 
@@ -790,15 +773,8 @@ export function hit() {
     const updated = [...hs];
     const h = { ...updated[$actH], cards: [...updated[$actH].cards, card] };
     const v = handValue(h.cards);
-    if (v > 21) {
-      h.result = "bust";
-      h.message = "Bust";
-      h.done = true;
-      h.busted = true;
-    } else if (v === 21) {
-      h.done = true;
-      h.stood = true;
-    }
+    if (v > 21) { h.result = "bust"; h.message = "Bust"; h.done = true; }
+    else if (v === 21) { h.done = true; }
     updated[$actH] = h;
 
     if (h.done) advanceOrDealer(updated, $actH);
@@ -809,13 +785,11 @@ export function hit() {
 export function stand() {
   if (get(replayMode)) return;
   const $actH = get(activeHand);
-  const current = get(hands)[$actH];
   if (hasStakeSession()) {
     emitRoundEvent({
       type: "playerAction",
       action: "stand",
       handIndex: $actH,
-      handId: current?.id,
     }).then(() => {
       if (get(phase) === PHASE.RESULT) requestEndRound();
     });
@@ -825,11 +799,10 @@ export function stand() {
     type: "playerAction",
     action: "stand",
     handIndex: $actH,
-    handId: current?.id,
   });
   hands.update(hs => {
     const updated = [...hs];
-    updated[$actH] = { ...updated[$actH], done: true, stood: true };
+    updated[$actH] = { ...updated[$actH], done: true };
     advanceOrDealer(updated, $actH);
     return updated;
   });
@@ -840,14 +813,13 @@ export function doubleDown() {
   const $actH = get(activeHand);
   const $hands = get(hands);
   const h = $hands[$actH];
-  if (!canDoubleHand(h, get(balance))) return;
+  if (get(balance) < h.bet) return;
   if (hasStakeSession()) {
     playCardSnap();
     emitRoundEvent({
       type: "playerAction",
       action: "double",
       handIndex: $actH,
-      handId: h?.id,
     }).then(() => {
       if (get(phase) === PHASE.RESULT) requestEndRound();
     });
@@ -863,7 +835,6 @@ export function doubleDown() {
     type: "playerAction",
     action: "double",
     handIndex: $actH,
-    handId: h?.id,
     card,
   });
 
@@ -875,21 +846,91 @@ export function doubleDown() {
       bet: updated[$actH].bet * 2,
       done: true,
       doubled: true,
-      stood: true,
     };
-    if (handValue(nh.cards) > 21) {
-      nh.result = "bust";
-      nh.message = "Bust";
-      nh.busted = true;
-    }
+    if (handValue(nh.cards) > 21) { nh.result = "bust"; nh.message = "Bust"; }
     updated[$actH] = nh;
     advanceOrDealer(updated, $actH);
     return updated;
   });
 }
 
+export function split() {
+  if (get(replayMode)) return;
+  const $actH    = get(activeHand);
+  const $hands   = get(hands);
+  const $balance = get(balance);
+  const $numSlots = get(numSlots);
+  const $maxHands = get(maxHands);
+
+  const h = $hands[$actH];
+  if (!h || h.cards.length !== 2) return;
+  if ($numSlots >= $maxHands) return;
+  if ($balance < h.bet) return;
+
+  if (h.cards[0].rank !== h.cards[1].rank) return;
+
+  const isAceSplit = h.cards[0].rank === "A";
+
+  // Deduct the matching bet for the second split hand
+  balance.update(b => b - h.bet);
+
+  // Draw one card for each new hand
+  const $shoe = get(shoe);
+  const draw1 = drawCard($shoe);
+  const draw2 = drawCard($shoe);
+  shoe.set($shoe);
+
+  playCardSnap();
+
+  // Build two replacement hands
+  const hand1 = {
+    ...makeHand(h.bet, { pp: 0, t: 0 }, true),
+    cards: [h.cards[0], draw1],
+    isAceSplit,
+    done: isAceSplit,
+    message: isAceSplit && handValue([h.cards[0], draw1]) === 21 ? "21" : "",
+  };
+  const hand2 = {
+    ...makeHand(h.bet, { pp: 0, t: 0 }, true),
+    cards: [h.cards[1], draw2],
+    isAceSplit,
+    done: isAceSplit,
+    message: isAceSplit && handValue([h.cards[1], draw2]) === 21 ? "21" : "",
+  };
+
+  emitRoundEvent({
+    type: "playerAction",
+    action: "split",
+    handIndex: $actH,
+    cards: [draw1, draw2],
+  });
+
+  hands.update(hs => {
+    const updated = [...hs];
+    updated[$actH] = hand1;
+    updated.splice($actH + 1, 0, hand2);
+    return updated;
+  });
+
+  numSlots.update(n => n + 1);
+
+  if (isAceSplit) {
+    // Both hands are immediately done — go to dealer
+    setTimeout(() => runDealer(get(hands)), 300);
+  } else {
+    // Let findNextActive pick the first playable hand (rightmost)
+    const updated = get(hands);
+    const nx = findNextActive(updated);
+    if (nx >= 0) {
+      activeHand.set(nx);
+    } else {
+      setTimeout(() => runDealer(get(hands)), 200);
+    }
+  }
+}
+
 function advanceOrDealer(updatedHands, currentIdx) {
-  const nx = findNextActive(updatedHands, currentIdx);
+  const nx = findNextActive(updatedHands);
   if (nx >= 0) {
     setTimeout(() => activeHand.set(nx), 150);
   } else {
@@ -949,20 +990,9 @@ function finishRound(hs, dealerVal) {
 
   const wins   = hs.filter(h => h.result === "win" || h.result === "blackjack").length;
   const losses = hs.filter(h => h.result === "lose" || h.result === "bust").length;
-  const pushes = hs.filter(h => h.result === "push").length;
-  if (hs.length === 1) {
-    // Single hand — simple message
-    if (wins > 0)        message.set("You Win!");
-    else if (losses > 0) message.set("Dealer Wins");
-    else                 message.set("Push");
-  } else {
-    // Multi-hand (split) — show W/L/P breakdown
-    const parts = [];
-    if (wins > 0)   parts.push(`${wins}W`);
-    if (losses > 0) parts.push(`${losses}L`);
-    if (pushes > 0) parts.push(`${pushes}P`);
-    message.set(parts.join(" ") || "Push");
-  }
+  if (wins > 0 && losses === 0)      message.set("You Win!");
+  else if (losses > 0 && wins === 0) message.set("Dealer Wins");
+  else                               message.set("");
 
   phase.set(PHASE.RESULT);
   emitRoundEvent({
@@ -981,49 +1011,6 @@ function finishRound(hs, dealerVal) {
 
 // ─── AUTO-PLAY TICK ───
 // Legacy shim for UI imports. Auto-play is now store-driven.
-
-export function split() {
-  if (get(replayMode)) return;
-  const $actH = get(activeHand);
-  const $hands = get(hands);
-  const current = $hands[$actH];
-  if (!canSplitHand(current) || get(balance) < current.bet) return;
-  if (hasStakeSession()) {
-    emitRoundEvent({
-      type: "playerAction",
-      action: "split",
-      handIndex: $actH,
-      handId: current?.id,
-    }).then(() => {
-      if (get(phase) === PHASE.RESULT) requestEndRound();
-    });
-    return;
-  }
-
-  balance.update((b) => b - current.bet);
-  const $shoe = get(shoe);
-  const { hands: nextHands, success, createdHands } = splitHandAtIndex($hands, $actH, $shoe, get(balance) + current.bet);
-  shoe.set($shoe);
-  if (!success) {
-    balance.update((b) => b + current.bet);
-    return;
-  }
-
-  emitRoundEvent({
-    type: "playerAction",
-    action: "split",
-    handIndex: $actH,
-    handId: current?.id,
-    createdHands: createdHands?.map((hand) => ({ id: hand.id, cards: hand.cards, bet: hand.bet })),
-  });
-
-  hands.set(nextHands);
-  activeHand.set($actH);
-  if (createdHands?.every((hand) => hand.done)) {
-    advanceOrDealer(nextHands, $actH);
-  }
-}
-
 
 export function autoTick() {
   if (get(autoPlay)) scheduleAutoLoop(0);

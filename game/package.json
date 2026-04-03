@@ -16,6 +16,10 @@
   },
   "dependencies": {
     "@fontsource/caveat": "^5.2.8",
+    "@fontsource/fredoka-one": "^5.2.5",
+    "@fontsource/inter": "^5.2.8",
+    "@fontsource/oswald": "^5.2.8",
+    "@fontsource/rock-salt": "^5.2.8",
     "pixi.js": "^8.17.1"
   }
 }

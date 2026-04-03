@@ -3,6 +3,11 @@
 // No external audio files — all synthesized via Web Audio API
 
 let ctx = null;
+let _muted = false;
+
+export function isMuted() { return _muted; }
+export function setMuted(value) { _muted = Boolean(value); }
+export function toggleMute() { _muted = !_muted; return _muted; }
 
 function getCtx() {
   if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -11,6 +16,7 @@ function getCtx() {
 
 // Card snap: 80ms filtered noise burst (on hit / double / dealer draw)
 export function playCardSnap() {
+  if (_muted) return;
   try {
     const ac = getCtx();
     const buf = ac.createBuffer(1, ac.sampleRate * 0.08, ac.sampleRate);
@@ -35,6 +41,7 @@ export function playCardSnap() {
 
 // Deal swoosh: 150ms lowpass noise (on deal)
 export function playDealSwoosh() {
+  if (_muted) return;
   try {
     const ac = getCtx();
     const buf = ac.createBuffer(1, ac.sampleRate * 0.15, ac.sampleRate);
