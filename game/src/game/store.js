@@ -521,7 +521,8 @@ export function setSideBetAmount(idx, key, amount) {
 
 export function addChip(idx, value) {
   if (get(replayMode)) return;
-  if (get(phase) !== PHASE.BET) return;
+  const p = get(phase);
+  if (p !== PHASE.BET && p !== PHASE.RESULT) return;
   hands.update(hs => hs.map((h, i) =>
     i === idx ? { ...h, bet: h.bet + value } : h
   ));

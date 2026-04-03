@@ -153,14 +153,14 @@
   let sbDraft = {};  // { [handIdx+key]: string } — live input value while editing
   let betEntryMode = "amount";
   let betDraft = {};
-  $: if (!isBet) {
+  $: if (!isBet && !isResult) {
     sbSelect = {};
     sbDraft = {};
     betDraft = {};
   }
 
   function toggleSbSelect(idx, key) {
-    if (!isBet) return;
+    if (!isBet && !isResult) return;
     const next = sbSelect[idx] === key ? null : key;
     sbSelect = { ...sbSelect, [idx]: next };
     // When opening a sidebet, pre-fill draft with current amount if set
@@ -182,7 +182,6 @@
     if (Number.isFinite(raw) && raw > 0) {
       setSideBetAmount(idx, key, Math.round(raw * MONEY_SCALE));
     }
-    // Close the sidebet selector
     sbSelect = { ...sbSelect, [idx]: null };
   }
 
@@ -528,12 +527,12 @@
           <!-- Cards area with side bet boxes on left -->
           <div class="cards-area">
             <!-- Side bet boxes: only show when betting or when a side bet is active -->
-            {#if isBet || hand.sb.pp > 0 || hand.sb.t > 0}
+            {#if isBet || isResult || hand.sb.pp > 0 || hand.sb.t > 0}
             <div class="sb-col">
               {#each [{k:"pp", n:"Perfect Pairs"}, {k:"t", n:"21+3"}] as sb}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <!-- svelte-ignore a11y-no-static-element-interactions -->
-                {#if isBet && activeSb === sb.k}
+                {#if (isBet || isResult) && activeSb === sb.k}
                   <!-- Expanded: show inline wager input -->
                   <div class="sb-box sb-box-editing" on:click|stopPropagation>
                     <span class="sb-box-label">{sb.n}</span>
@@ -552,7 +551,7 @@
                   <div
                     class="sb-box"
                     class:sb-active={hand.sb[sb.k] > 0}
-                    on:click={() => !isReplay && isBet && toggleSbSelect(idx, sb.k)}
+                    on:click={() => !isReplay && (isBet || isResult) && toggleSbSelect(idx, sb.k)}
                   >
                     <span class="sb-box-label">{sb.n}</span>
                     {#if hand.sb[sb.k] > 0}
@@ -603,12 +602,12 @@
 
 
               <!-- Wager label -->
-              {#if hand.bet > 0 || isBet || (isResult && hand.cards.length === 0)}
+              {#if hand.bet > 0 || isBet || isResult}
                 <div class="bet-bar">
                   <div class="wager-label wager-label-top">
                     {fmt(hand.bet, $runtimeCurrency)}{activeSb ? ` · ${activeSb === 'pp' ? 'PP' : '21+3'} ${fmt(hand.sb[activeSb], $runtimeCurrency)}` : ''}
                   </div>
-                  {#if (isBet || (isResult && hand.cards.length === 0)) && !isReplay && !activeSb}
+                  {#if (isBet || isResult) && !isReplay && !activeSb}
                     <div class="bet-amount-row bet-amount-row-with-actions">
                       <button class="bet-quick-btn" on:click={() => adjustBetByFactor(idx, 0.5)}>1/2</button>
                       <div class="bet-input-shell">
@@ -1606,7 +1605,7 @@
   .btn-clear  { font-size: 12px; color: #bfb49a; background: none; border: 1px solid #2a5a3a; border-radius: 4px; padding: 1px 8px; margin-top: 2px; }
 
   /* SIDE BETS */
-  .cards-area { position: relative; display: flex; align-items: flex-start; flex-direction: row; gap: 4px; }
+  .cards-area { position: relative; display: flex; align-items: center; flex-direction: row; gap: 4px; }
   .sb-col     { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
   .cards-col  { min-width: 104px; display: flex; flex-direction: column; align-items: center; }
 
