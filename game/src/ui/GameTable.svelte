@@ -129,9 +129,10 @@
     if ($autoPlay) {
       autoPlay.set(false);
     } else {
+      showAuto.set(false); // close the panel immediately
       autoCount.set(0);
       autoPlay.set(true);
-      if (isResult) newRound();
+      if (isResult || isBet) autoTick(); // kick off immediately
     }
   }
 
@@ -402,11 +403,6 @@
 
   <!-- FELT AREA -->
   <div class="felt" on:click={closePanels}>
-
-    <!-- FACT BLOCK — top-left, non-intrusive -->
-    {#if $showFacts && !isDealer}
-      <div class="fact-block" on:click={stopEvent}>{$fact}</div>
-    {/if}
 
     <!-- INSURANCE MODAL — centered overlay -->
     {#if isIns && !isReplay}
@@ -863,23 +859,27 @@
       {/if}
 
 
-      <!-- Play / Action buttons -->
-      {#if isPlay && !$autoPlay && activeH && !isReplay}
-        <div class="action-grid">
-          <button class="btn-action" on:click={hit}>Hit</button>
-          <button class="btn-action" on:click={stand}>Stand</button>
-          <button class="btn-action" class:dim={!canSplit} disabled={!canSplit} on:click={canSplit ? split : undefined}>Split</button>
-          <button class="btn-action" class:dim={!canDouble} disabled={!canDouble} on:click={canDouble ? doubleDown : undefined}>x2</button>
-        </div>
-      {/if}
-
-      <!-- Stop autoplay row -->
-      {#if $autoPlay && !isReplay && !autoplayDisabled}
-        <div class="ctrl-row ctrl-row-inline">
-          <div class="ctrl-right">
-            <button class="btn-stop" on:click={() => autoPlay.set(false)}>Stop</button>
+      <!-- Play / Action buttons — fixed height container prevents layout jump -->
+      <div class="action-area-fixed">
+        {#if isPlay && !$autoPlay && activeH && !isReplay}
+          <div class="action-grid">
+            <button class="btn-action" on:click={hit}>Hit</button>
+            <button class="btn-action" on:click={stand}>Stand</button>
+            <button class="btn-action" class:dim={!canSplit} disabled={!canSplit} on:click={canSplit ? split : undefined}>Split</button>
+            <button class="btn-action" class:dim={!canDouble} disabled={!canDouble} on:click={canDouble ? doubleDown : undefined}>x2</button>
           </div>
-        </div>
+        {:else if $autoPlay && !isReplay && !autoplayDisabled}
+          <!-- Full-width red stop bar during autoplay -->
+          <button class="btn-stop-bar" on:click={() => autoPlay.set(false)}>■ Stop Auto</button>
+        {:else}
+          <!-- Spacer to hold layout -->
+          <div class="action-area-spacer"></div>
+        {/if}
+      </div>
+
+      <!-- Fact display — below action buttons -->
+      {#if $showFacts && (isPlay || $autoPlay) && $fact}
+        <div class="fact-below-actions" on:click|stopPropagation>{$fact}</div>
       {/if}
 
       <!-- Deal button -->
@@ -1700,7 +1700,35 @@
     font-size: 20px;
   }
 
+  .action-area-fixed { min-height: 106px; display: flex; flex-direction: column; justify-content: flex-end; }
+  .action-area-spacer { flex: 1; }
   .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 5px; }
+  /* Full-width red stop bar replaces action buttons during autoplay */
+  .btn-stop-bar {
+    width: 100%;
+    padding: 12px;
+    background: #c62828;
+    color: #fff;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    margin-bottom: 5px;
+    transition: background 0.15s;
+  }
+  .btn-stop-bar:hover { background: #e53935; }
+  /* Fact shown below action buttons */
+  .fact-below-actions {
+    font-size: 13px;
+    color: rgba(242,232,208,0.55);
+    text-align: center;
+    padding: 4px 8px 0;
+    line-height: 1.4;
+    min-height: 20px;
+  }
   .btn-action {
     padding: 13px 0; border-radius: 7px; font-size: 16px; font-weight: 700;
     background: #1d4a2c; color: #f2e8d0; border: 1px solid #2a5a3a;
