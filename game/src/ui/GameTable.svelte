@@ -159,6 +159,9 @@
     sbDraft = {};
     betDraft = {};
   }
+  $: if (isPlay) {
+    showAuto.set(false); // always close auto panel when play starts
+  }
 
   function toggleSbSelect(idx, key) {
     if (!isBet && !isResult) return;
@@ -260,6 +263,7 @@
 
   function toggleAutoPanel(event) {
     event?.stopPropagation?.();
+    if (isPlay) return; // don't open auto panel mid-hand
     showAuto.update((v) => !v);
     showRules.set(false);
   }
@@ -341,7 +345,7 @@
   <div class="balance-row">
     <div class="utility-btns" on:click={stopEvent}>
       {#if !isReplay && !autoplayDisabled}
-        <button class="btn-tab btn-utility" class:active={$showAuto} on:click={toggleAutoPanel}>Auto</button>
+        <button class="btn-tab btn-utility" class:active={$showAuto} class:dim={isPlay && !$autoPlay} on:click={toggleAutoPanel}>Auto</button>
       {/if}
       <button class="btn-tab btn-utility" class:active={$showRules} on:click={toggleRulesPanel}>Rules</button>
       {#if !isReplay}
@@ -877,8 +881,8 @@
         {/if}
       </div>
 
-      <!-- Fact display — below action buttons -->
-      {#if $showFacts && (isPlay || $autoPlay) && $fact}
+      <!-- Fact display — always visible below action buttons during play -->
+      {#if (isPlay || $autoPlay) && $fact}
         <div class="fact-below-actions" on:click|stopPropagation>{$fact}</div>
       {/if}
 
@@ -1700,7 +1704,7 @@
     font-size: 20px;
   }
 
-  .action-area-fixed { min-height: 106px; display: flex; flex-direction: column; justify-content: flex-end; }
+  .action-area-fixed { min-height: 101px; display: flex; flex-direction: column; justify-content: flex-end; }
   .action-area-spacer { flex: 1; }
   .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 5px; }
   /* Full-width red stop bar replaces action buttons during autoplay */
