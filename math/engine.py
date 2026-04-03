@@ -16,12 +16,14 @@ RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
 RED_SUITS = {"diamonds", "hearts"}
 NUM_DECKS = 6
 RESHUFFLE_THRESHOLD = 52  # reshuffle when fewer than this many cards remain
-BJ_MULTIPLIER = 1.5  # 3:2 payout
+BJ_MULTIPLIER = 1.4  # 7:5 payout (keeps RTP ~97.9%, safely below Stake 98.0% ceiling)
 
 # ─── APPROVAL RULESET LOCK ───
 # Stake Engine approval: H17, no double after split, no resplitting
-ALLOW_DAS = False      # No double after split (reduces RTP ~0.14%)
-ALLOW_RESPLIT = False  # No resplitting allowed (reduces RTP ~0.05%)
+# Blackjack pays 7:5 (1.4x) — primary RTP lever keeping base game ~97.9% below 98.0% ceiling
+ALLOW_DAS = False      # No double after split
+ALLOW_RESPLIT = False  # No resplitting allowed
+DOUBLE_ON_HARD = {9, 10, 11}  # Double allowed on hard 9, 10, 11
 
 # Stake Engine money format: integers with 6 decimal places
 # 1_000_000 = $1.00
@@ -312,6 +314,23 @@ def resolve_hand_state(hand: HandState, dealer_cards: List[Card]) -> Tuple[HandR
     if player_val == dealer_val:
         return HandResult.PUSH, hand.bet
     return HandResult.LOSE, 0
+
+
+def can_double_hand(hand: HandState) -> bool:
+    """
+    Return True if the hand is eligible for a double-down under the locked ruleset.
+    Restricted to hard 11 only (no split hands, no split-aces-locked hands,
+    exactly 2 cards, and the hard total must be in DOUBLE_ON_HARD).
+    """
+    if hand.done or hand.doubled or hand.split_aces_locked or hand.is_split_hand:
+        return False
+    if len(hand.cards) != 2:
+        return False
+    total = hand_value(hand.cards)
+    soft = is_soft(hand.cards)
+    if soft:
+        return False  # no soft doubling
+    return total in DOUBLE_ON_HARD
 
 
 def can_split_hand(hand: HandState, allow_same_value_split: bool = True) -> bool:

@@ -5,9 +5,9 @@ against backend-owned round state instead of only local gameplay state.
 
 Files:
 
-- [/Users/gerryturnbow/degen-blackjack/authoritative_blackjack.py](/Users/gerryturnbow/degen-blackjack/authoritative_blackjack.py)
-- [/Users/gerryturnbow/degen-blackjack/backend_config.py](/Users/gerryturnbow/degen-blackjack/backend_config.py)
-- [/Users/gerryturnbow/degen-blackjack/mock_rgs_server.py](/Users/gerryturnbow/degen-blackjack/mock_rgs_server.py)
+- [authoritative_blackjack.py](authoritative_blackjack.py)
+- [backend_config.py](backend_config.py)
+- [mock_rgs_server.py](mock_rgs_server.py)
 
 ## what it does
 
@@ -50,7 +50,7 @@ Known limitations:
 From the top-level repo:
 
 ```bash
-python3 /Users/gerryturnbow/degen-blackjack/mock_rgs_server.py
+python3 mock_rgs_server.py
 ```
 
 It listens on:
@@ -64,7 +64,7 @@ You can override startup config with env vars:
 ```bash
 MOCK_RGS_HOST=127.0.0.1
 MOCK_RGS_PORT=8787
-MOCK_RGS_STORAGE=/Users/gerryturnbow/degen-blackjack/mock_rgs_state.json
+MOCK_RGS_STORAGE=mock_rgs_state.json
 MOCK_RGS_SEED=1337
 ```
 
@@ -73,7 +73,7 @@ MOCK_RGS_SEED=1337
 Start the Svelte app as usual:
 
 ```bash
-cd /Users/gerryturnbow/degen-blackjack/game
+cd game
 npm install
 npm run dev
 ```
@@ -88,7 +88,7 @@ You can also use Vite env defaults instead of typing the whole query string on
 every run:
 
 ```bash
-cd /Users/gerryturnbow/degen-blackjack/game
+cd game
 VITE_STAKE_SESSION_ID=local-dev-session \
 VITE_STAKE_RGS_URL=http://127.0.0.1:8787 \
 npm run dev

@@ -16,8 +16,8 @@ It is the source of truth until replaced by a finalized math-backed rules sheet.
 ### Core blackjack
 - 6 decks
 - Dealer **hits soft 17**
-- Blackjack pays **3:2**
-- Double allowed on any initial two-card hand
+- Blackjack pays **7:5**
+- Double allowed on hard 9, 10, or 11 (no DAS, no soft doubling)
 - Insurance offered against dealer Ace
 - No pseudo-blackjack / no forced autoplay product model
 - Final game must support real player decisions
@@ -27,8 +27,10 @@ It is the source of truth until replaced by a finalized math-backed rules sheet.
 - Split hands may be hit multiple times
 - Split aces receive one card only
 - Split aces may not be resplit
-- Resplitting non-aces is allowed only if final RTP/math validation keeps the base game below 98.0%
-- Double-after-split is treated as a configurable toggle during implementation and will remain only if math validation keeps the base game below 98.0%
+- No resplitting of any pairs
+- No double-after-split (DAS disabled)
+- Blackjack pays 7:5 (1.4x) — this is the primary RTP lever that keeps base game at ~97.9%
+- Double allowed on hard 9, 10, 11 (no DAS, no soft doubling)
 
 ### Surrender
 - Late surrender is **not included by default** as an RTP-reduction lever because it increases player RTP

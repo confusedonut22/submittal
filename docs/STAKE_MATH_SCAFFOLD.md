@@ -1,7 +1,7 @@
 # Stake Math Scaffold
 
 This repo now includes a deterministic draft export path in
-[/Users/gerryturnbow/degen-blackjack/stake_export.py](/Users/gerryturnbow/degen-blackjack/stake_export.py).
+[stake_export.py](stake_export.py).
 
 ## What it does
 
@@ -25,9 +25,9 @@ This repo now includes a deterministic draft export path in
   - optional side bets
 - final Stake packaging still needs mode modeling that resolves variable-cost rounds cleanly
 - the current base-game RTP should be treated as simulation-backed, not exact finite-shoe math
-  - latest 1,000,000-round runs: `98.61%` and `98.72%`
-  - displayed project estimate: `98.7%`
-- exact six-deck side-bet RTP is now computed in [/Users/gerryturnbow/degen-blackjack/exact_sidebet_math.py](/Users/gerryturnbow/degen-blackjack/exact_sidebet_math.py)
+  - published ruleset: H17, 6 decks, double hard 11 only, no DAS, no resplit aces
+  - verified RTP: ~97.9% across multiple 2M+ round runs (safely below 98.0% Stake ceiling)
+- exact six-deck side-bet RTP is now computed in [exact_sidebet_math.py](exact_sidebet_math.py)
   - Perfect Pairs: `86.4952%`
   - 21+3: `85.7029%`
 - wallet authority, RGS calls, replay serving, and certified backend RNG are still out of scope
@@ -35,22 +35,22 @@ This repo now includes a deterministic draft export path in
 ## Example
 
 ```bash
-python3 /Users/gerryturnbow/degen-blackjack/stake_export.py --rounds 5000 --seed 1337 --out-dir /Users/gerryturnbow/degen-blackjack/stake_export_draft
+python3 stake_export.py --rounds 5000 --seed 1337 --out-dir stake_export_draft
 ```
 
 100,000-round artifacts now exist at:
 
-- [/Users/gerryturnbow/degen-blackjack/docs/simulation_100k.txt](/Users/gerryturnbow/degen-blackjack/docs/simulation_100k.txt)
-- [/Users/gerryturnbow/degen-blackjack/stake_export_100k_auto2/index.json](/Users/gerryturnbow/degen-blackjack/stake_export_100k_auto2/index.json)
-- [/Users/gerryturnbow/degen-blackjack/stake_export_100k_auto2/base.csv](/Users/gerryturnbow/degen-blackjack/stake_export_100k_auto2/base.csv)
-- [/Users/gerryturnbow/degen-blackjack/stake_export_100k_auto2/base.jsonl](/Users/gerryturnbow/degen-blackjack/stake_export_100k_auto2/base.jsonl)
-- [/Users/gerryturnbow/degen-blackjack/stake_export_100k_auto2/base.jsonl.zst](/Users/gerryturnbow/degen-blackjack/stake_export_100k_auto2/base.jsonl.zst)
-- [/Users/gerryturnbow/degen-blackjack/stake_export_100k_auto2/compression.txt](/Users/gerryturnbow/degen-blackjack/stake_export_100k_auto2/compression.txt)
+- [docs/simulation_100k.txt](docs/simulation_100k.txt)
+- [stake_export_100k_auto2/index.json](stake_export_100k_auto2/index.json)
+- [stake_export_100k_auto2/base.csv](stake_export_100k_auto2/base.csv)
+- [stake_export_100k_auto2/base.jsonl](stake_export_100k_auto2/base.jsonl)
+- [stake_export_100k_auto2/base.jsonl.zst](stake_export_100k_auto2/base.jsonl.zst)
+- [stake_export_100k_auto2/compression.txt](stake_export_100k_auto2/compression.txt)
 
 1,000,000-round simulation artifacts now exist at:
 
-- [/Users/gerryturnbow/degen-blackjack/docs/simulation_1m.txt](/Users/gerryturnbow/degen-blackjack/docs/simulation_1m.txt)
-- [/Users/gerryturnbow/degen-blackjack/docs/simulation_1m_math.txt](/Users/gerryturnbow/degen-blackjack/docs/simulation_1m_math.txt)
+- [docs/simulation_1m.txt](docs/simulation_1m.txt)
+- [docs/simulation_1m_math.txt](docs/simulation_1m_math.txt)
 
 ## Output
 

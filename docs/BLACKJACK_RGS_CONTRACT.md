@@ -1,7 +1,7 @@
 # Blackjack RGS Contract Draft
 
 This document freezes the current repo-local contract for integrating the
-blackjack frontend in [/Users/gerryturnbow/degen-blackjack/game](/Users/gerryturnbow/degen-blackjack/game)
+blackjack frontend in [game](game)
 with a Stake-style RGS flow.
 
 This is not a final Stake-approved contract. It exists to separate:

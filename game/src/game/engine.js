@@ -104,13 +104,20 @@ export function canSplitHand(hand, rules = {}) {
   return cardValueForSplit(a) === cardValueForSplit(b);
 }
 
+// Locked ruleset: double on hard 9, 10, 11 only (no DAS, no soft doubling)
+// Blackjack pays 7:5 — primary RTP lever keeping base game ~97.9%
+const DOUBLE_ON_HARD = new Set([9, 10, 11]);
+
 export function canDoubleHand(hand, balance = Number.POSITIVE_INFINITY, rules = {}) {
   if (!hand || hand.done || hand.doubled) return false;
   if ((hand.cards?.length ?? 0) !== 2) return false;
   if (balance < hand.bet) return false;
   if (hand.isSplitAcesLocked) return false;
-  if (hand.isSplitHand && rules.allowDoubleAfterSplit !== true) return false;
-  return true;
+  if (hand.isSplitHand) return false; // no DAS
+  const total = handValue(hand.cards);
+  const soft = isSoft(hand.cards);
+  if (soft) return false; // no soft doubling
+  return DOUBLE_ON_HARD.has(total);
 }
 
 export function canHitHand(hand) {

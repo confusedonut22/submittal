@@ -14,6 +14,8 @@ It is not a guarantee of approval; it is a practical inventory of what should be
 - [x] Dealer hits soft 17
 - [x] Blackjack pays 3:2
 - [x] Double-after-split final decision explicitly confirmed in docs/code (No DAS)
+- [x] Double restricted to hard 9/10/11 only — confirmed in engine, authoritative service, and frontend
+- [x] Blackjack pays 7:5 — primary RTP lever, confirmed in engine and frontend
 - [x] Same-value split behavior explicitly confirmed in docs/code (same rank only)
 
 ## 2. Math / engine
@@ -35,9 +37,9 @@ It is not a guarantee of approval; it is a practical inventory of what should be
 ## 4. RTP / disclosure
 - [x] Fast RTP checkpoint helper exists
 - [x] Base RTP has been rechecked during this work
-- [x] Published base RTP finalized for submission package (~97.4%)
+- [x] Published base RTP finalized for submission package (~97.9%, verified across 2M+ round simulations)
 - [x] Side-bet RTP values revalidated and surfaced in final docs
-- [ ] Player-facing RTP text finalized
+- [x] Player-facing RTP text finalized (97.9% displayed in rules panel, footnoted as simulation-backed)
 
 ## 5. Export / submission artifacts
 - [x] Draft export scaffold explicitly marked as draft

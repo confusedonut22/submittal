@@ -1,7 +1,7 @@
 # Replay Event Schema
 
 This document freezes the draft replay/event shape currently emitted by
-[/Users/gerryturnbow/degen-blackjack/stake_export.py](/Users/gerryturnbow/degen-blackjack/stake_export.py).
+[stake_export.py](stake_export.py).
 
 ## scope
 

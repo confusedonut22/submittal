@@ -654,7 +654,7 @@
         <div class="panel-title">How To Play</div>
         <div class="rules-section"><strong>Payouts</strong>
           <div class="rules-text">
-            Blackjack pays 3:2<br/>
+            Blackjack pays 7:5<br/>
             Winning hand pays 1:1<br/>
             Insurance pays 2:1
           </div>
@@ -682,7 +682,7 @@
         <div class="rules-section"><strong>Game Rules</strong>
           <div class="rules-text">
             Dealer hits soft 17.<br/>
-            Double down is available on any initial 2-card hand.<br/>
+            Double down is available on hard 9, 10, or 11.<br/>
             Split hands may be hit multiple times; split aces receive one card only.<br/>
             21+3 treats Ace as high or low for straights.
           </div>
@@ -697,10 +697,10 @@
         {#if showRtp}
           <div class="rules-section"><strong>Return to Player</strong>
             <div class="rules-text rtp">
-              Blackjack — 98.7%*<br/>
+              Blackjack — 97.9%*<br/>
               Perfect Pairs bet — 86.4952%<br/>
               21+3 bet — 85.7029%<br/><br/>
-              *base game estimate is simulation-backed using basic strategy over current 1,000,000-round test runs.<br/><br/>
+              *base game RTP is simulation-backed using basic strategy (H17, 7:5 BJ, double hard 9/10/11, no DAS) over 1,000,000-round test runs.<br/><br/>
               Combined RTP depends on the amounts wagered on each selected bet. If equal amounts are wagered on multiple bets, the effective RTP is the average of those selected RTP values.<br/><br/>
               A player's skill and/or strategy will have an impact on their chances of winning.<br/><br/>
               Any malfunction voids the game round and all eventual payouts for the round.

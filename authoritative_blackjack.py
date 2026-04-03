@@ -15,6 +15,7 @@ from typing import Any, Dict, List, Optional
 
 from engine import (
     BJ_MULTIPLIER,
+    DOUBLE_ON_HARD,
     MONEY_SCALE,
     Card,
     HandResult,
@@ -28,6 +29,7 @@ from engine import (
     evaluate_perfect_pairs,
     hand_value,
     is_blackjack,
+    is_soft,
     resolve_hand,
     resolve_hand_state,
     split_value,
@@ -82,11 +84,16 @@ def allowed_actions_for_round(round_record: "AuthoritativeRound", session_balanc
     if round_record.phase == "PLAY" and round_record.active_hand >= 0:
         actions = ["hit", "stand"]
         hand = round_record.hands[round_record.active_hand]
-        # Double allowed on first 2 cards; ALLOW_DAS = False so no double after split
+        # Double on hard 9, 10, 11 only; no DAS; no soft doubling
         is_split_hand = hand.get("isSplitHand", False)
         is_split_aces_locked = hand.get("isSplitAcesLocked", False)
-        if len(hand["cards"]) == 2 and not is_split_hand and not is_split_aces_locked:
-            actions.append("double")
+        if (len(hand["cards"]) == 2
+                and not is_split_hand
+                and not is_split_aces_locked):
+            cards = hand["cards"]
+            total = hand_value(cards)
+            if not is_soft(cards) and total in DOUBLE_ON_HARD:
+                actions.append("double")
         # Split: same rank/value, not split-aces-locked, sufficient balance
         if _can_split(hand, session_balance, round_record.extra_debits):
             actions.append("split")
@@ -680,6 +687,11 @@ class MockBlackjackService:
                 raise ValueError("Double after split is not allowed")
             if hand.get("isSplitAcesLocked", False):
                 raise ValueError("Cannot double a split-aces-locked hand")
+                # Enforce double restriction (hard 9, 10, 11 only; no DAS; no soft)
+            _cards = hand["cards"]
+            _total = hand_value(_cards)
+            if is_soft(_cards) or _total not in DOUBLE_ON_HARD:
+                raise ValueError(f"Double only allowed on hard {sorted(DOUBLE_ON_HARD)}; got {'soft' if is_soft(_cards) else 'hard'} {_total}")
             if session.balance - round_record.extra_debits < hand["bet"]:
                 raise ValueError("Insufficient balance for double")
             round_record.extra_debits += hand["bet"]

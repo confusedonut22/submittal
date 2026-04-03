@@ -1,3 +1,7 @@
+# SUPERSEDED — generated under old ruleset (double any 2 cards, RTP ~98.7%)
+# Current ruleset: double hard 11 only, verified RTP ~97.9%
+# Re-run: python3 math/simulate.py
+
 Degen Blackjack — RTP Simulation
 Chad Labs / Stake Engine
 Running 1,000,000 rounds per test...

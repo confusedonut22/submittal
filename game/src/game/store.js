@@ -949,9 +949,20 @@ function finishRound(hs, dealerVal) {
 
   const wins   = hs.filter(h => h.result === "win" || h.result === "blackjack").length;
   const losses = hs.filter(h => h.result === "lose" || h.result === "bust").length;
-  if (wins > 0 && losses === 0)      message.set("You Win!");
-  else if (losses > 0 && wins === 0) message.set("Dealer Wins");
-  else                               message.set(`${wins}W ${losses}L`);
+  const pushes = hs.filter(h => h.result === "push").length;
+  if (hs.length === 1) {
+    // Single hand — simple message
+    if (wins > 0)        message.set("You Win!");
+    else if (losses > 0) message.set("Dealer Wins");
+    else                 message.set("Push");
+  } else {
+    // Multi-hand (split) — show W/L/P breakdown
+    const parts = [];
+    if (wins > 0)   parts.push(`${wins}W`);
+    if (losses > 0) parts.push(`${losses}L`);
+    if (pushes > 0) parts.push(`${pushes}P`);
+    message.set(parts.join(" ") || "Push");
+  }
 
   phase.set(PHASE.RESULT);
   emitRoundEvent({

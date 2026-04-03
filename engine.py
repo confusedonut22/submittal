@@ -16,11 +16,12 @@ RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
 RED_SUITS = {"diamonds", "hearts"}
 NUM_DECKS = 6
 RESHUFFLE_THRESHOLD = 52  # reshuffle when fewer than this many cards remain
-BJ_MULTIPLIER = 1.5  # 3:2 payout
+BJ_MULTIPLIER = 1.4  # 7:5 payout (keeps RTP ~97.9%, below Stake 98.0% ceiling)
 
 # ─── APPROVAL RULESET LOCK ───
 # Stake Engine approval: H17, no double after split, no resplitting
-ALLOW_DAS = False      # No double after split (reduces RTP ~0.14%)
+ALLOW_DAS = False      # No double after split
+DOUBLE_ON_HARD = {9, 10, 11}  # Double allowed on hard 9, 10, 11 only (no soft doubling)
 ALLOW_RESPLIT = False  # No resplitting allowed (reduces RTP ~0.05%)
 
 # Stake Engine money format: integers with 6 decimal places

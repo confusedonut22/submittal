@@ -34,7 +34,7 @@ It separates work that appears completed with high confidence from work that sti
 5. [x] Existing split/settlement-related targeted tests pass in current local test runs.
 6. [x] Preferred desktop reference build has been identified and restored on Vercel production alias.
 7. [x] Button legality should be verified as fully derived from engine/store truth in all play states.
-8. [ ] Multi-hand messaging/results should be reviewed for split rounds.
+8. [x] Multi-hand messaging/results fixed for split rounds (W/L/P breakdown, push-aware).
 9. [ ] Rules/help/disclosure copy should be rechecked against actual implementation.
 10. [ ] Mobile-vs-desktop UX changes should be reviewed to ensure desktop reference behavior is preserved.
 11. [ ] Frontend readiness doc should be refreshed/finalized against current implementation reality.

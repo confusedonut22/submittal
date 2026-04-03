@@ -1,7 +1,7 @@
 # Stake Frontend Readiness
 
 This document tracks the current frontend submission blockers for
-[/Users/gerryturnbow/degen-blackjack/game](/Users/gerryturnbow/degen-blackjack/game).
+[game](game).
 
 ## confirmed
 
@@ -75,5 +75,5 @@ This document tracks the current frontend submission blockers for
 
 See also:
 
-- [/Users/gerryturnbow/degen-blackjack/docs/BLACKJACK_RGS_CONTRACT.md](/Users/gerryturnbow/degen-blackjack/docs/BLACKJACK_RGS_CONTRACT.md)
-- [/Users/gerryturnbow/degen-blackjack/docs/MOCK_RGS_SERVICE.md](/Users/gerryturnbow/degen-blackjack/docs/MOCK_RGS_SERVICE.md)
+- [docs/BLACKJACK_RGS_CONTRACT.md](docs/BLACKJACK_RGS_CONTRACT.md)
+- [docs/MOCK_RGS_SERVICE.md](docs/MOCK_RGS_SERVICE.md)

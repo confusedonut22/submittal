@@ -179,7 +179,7 @@ npm test
 
 ## Run the math split tests
 ```bash
-cd /Users/gerryturnbow/degen-blackjack
+cd <repo-root>
 python3 -m unittest tests/test_math_split_engine.py
 ```
 
