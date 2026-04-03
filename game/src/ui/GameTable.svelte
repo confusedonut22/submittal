@@ -6,7 +6,7 @@
     numSlots, maxHands, autoPlay, autoSpeed, autoCount, autoMax, autoMode,
     showAuto, showRules, showFacts, totalCost, canDeal, introOp, rgsStatus, rgsError, runtimeConfig, runtimeJurisdiction,
     sessionStartedAt, netPosition, runtimeCurrency,
-    startIntro, addSlot, removeSlot, addSideBetChip, clearSideBet, addChip, clearBet, setBetLevel, adjustBetByFactor,
+    startIntro, addSlot, removeSlot, addSideBetChip, clearSideBet, setSideBetAmount, addChip, clearBet, setBetLevel, adjustBetByFactor,
     newRound, deal, hit, stand, doubleDown, split, takeInsurance, autoTick, refreshStakeBalance,
   } from "../game/store.js";
   import { PHASE, SPEEDS, MONEY_SCALE, CHIPS, CHIP_IMAGES, LOGO_IMAGE, C, RANK_VALUES } from "../game/constants.js";
@@ -143,16 +143,40 @@
 
   // ─── SIDE BET SELECTION ───
   let sbSelect = {}; // { [handIdx]: "pp" | "t" | null }
+  let sbDraft = {};  // { [handIdx+key]: string } — live input value while editing
   let betEntryMode = "amount";
   let betDraft = {};
   $: if (!isBet) {
     sbSelect = {};
+    sbDraft = {};
     betDraft = {};
   }
 
   function toggleSbSelect(idx, key) {
     if (!isBet) return;
-    sbSelect = { ...sbSelect, [idx]: sbSelect[idx] === key ? null : key };
+    const next = sbSelect[idx] === key ? null : key;
+    sbSelect = { ...sbSelect, [idx]: next };
+    // When opening a sidebet, pre-fill draft with current amount if set
+    if (next) {
+      const hand = $hands[idx];
+      const cur = hand?.sb[next] ?? 0;
+      const draftKey = idx + next;
+      sbDraft = { ...sbDraft, [draftKey]: cur > 0 ? (cur / MONEY_SCALE).toFixed(2) : '' };
+    }
+  }
+
+  function onSbDraftInput(idx, key, val) {
+    sbDraft = { ...sbDraft, [idx + key]: val };
+  }
+
+  function commitSbDraft(idx, key) {
+    const draftKey = idx + key;
+    const raw = Number.parseFloat(String(sbDraft[draftKey] ?? '').replace(/[^0-9.]/g, ''));
+    if (Number.isFinite(raw) && raw > 0) {
+      setSideBetAmount(idx, key, Math.round(raw * MONEY_SCALE));
+    }
+    // Close the sidebet selector
+    sbSelect = { ...sbSelect, [idx]: null };
   }
 
   function onChipClick(idx, value) {
@@ -502,17 +526,33 @@
               {#each [{k:"pp", n:"Perfect Pairs"}, {k:"t", n:"21+3"}] as sb}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <!-- svelte-ignore a11y-no-static-element-interactions -->
-                <div
-                  class="sb-box"
-                  class:sb-active={hand.sb[sb.k] > 0}
-                  class:sb-selected={activeSb === sb.k}
-                  on:click={() => !isReplay && toggleSbSelect(idx, sb.k)}
-                >
-                  <span class="sb-box-label">{sb.n}</span>
-                  {#if hand.sb[sb.k] > 0}
-                    <span class="sb-box-amt">{fmt(hand.sb[sb.k], $runtimeCurrency)}</span>
-                  {/if}
-                </div>
+                {#if isBet && activeSb === sb.k}
+                  <!-- Expanded: show inline wager input -->
+                  <div class="sb-box sb-box-editing" on:click|stopPropagation>
+                    <span class="sb-box-label">{sb.n}</span>
+                    <input
+                      class="sb-wager-input"
+                      inputmode="decimal"
+                      placeholder="0.00"
+                      value={sbDraft[idx + sb.k] ?? ''}
+                      on:input={(e) => onSbDraftInput(idx, sb.k, e.currentTarget.value)}
+                      on:keydown={(e) => e.key === 'Enter' && commitSbDraft(idx, sb.k)}
+                      on:blur={() => commitSbDraft(idx, sb.k)}
+                      autofocus
+                    />
+                  </div>
+                {:else}
+                  <div
+                    class="sb-box"
+                    class:sb-active={hand.sb[sb.k] > 0}
+                    on:click={() => !isReplay && isBet && toggleSbSelect(idx, sb.k)}
+                  >
+                    <span class="sb-box-label">{sb.n}</span>
+                    {#if hand.sb[sb.k] > 0}
+                      <span class="sb-box-amt">{fmt(hand.sb[sb.k], $runtimeCurrency)}</span>
+                    {/if}
+                  </div>
+                {/if}
               {/each}
             </div>
             {/if}
@@ -561,7 +601,7 @@
                   <div class="wager-label wager-label-top">
                     {fmt(hand.bet, $runtimeCurrency)}{activeSb ? ` · ${activeSb === 'pp' ? 'PP' : '21+3'} ${fmt(hand.sb[activeSb], $runtimeCurrency)}` : ''}
                   </div>
-                  {#if (isBet || (isResult && hand.cards.length === 0)) && !isReplay && !activeSb && (betEntryMode === 'amount' || betEntryMode === 'both')}
+                  {#if (isBet || (isResult && hand.cards.length === 0)) && !isReplay && !activeSb}
                     <div class="bet-amount-row bet-amount-row-with-actions">
                       <button class="bet-quick-btn" on:click={() => adjustBetByFactor(idx, 0.5)}>1/2</button>
                       <div class="bet-input-shell">
@@ -578,11 +618,7 @@
                       </div>
                       <button class="bet-quick-btn" on:click={() => adjustBetByFactor(idx, 2)}>2x</button>
                     </div>
-                  {:else if (isBet || (isResult && hand.cards.length === 0)) && !isReplay && !activeSb}
-                    <div class="bet-quick-actions bet-quick-actions-bottom">
-                      <button class="bet-quick-btn" on:click={() => adjustBetByFactor(idx, 0.5)}>1/2</button>
-                      <button class="bet-quick-btn" on:click={() => adjustBetByFactor(idx, 2)}>2x</button>
-                    </div>
+
                   {/if}
                 </div>
               {/if}
@@ -1119,7 +1155,7 @@
   .card {
     border-radius: 8px;
     width: 104px;
-    height: 146px;
+    height: 175px;
     position: relative;
     overflow: hidden;
     animation: cardIn 0.22s ease both;
@@ -1172,7 +1208,7 @@
   .card-face:not(.red) .card-center { color: #1b1b1b; }
 
   .card-placeholder {
-    width: 104px; height: 146px;
+    width: 104px; height: 175px;
     border-radius: 8px;
     border: 1.5px dashed rgba(242,232,208,0.12);
     background: rgba(242,232,208,0.03);
@@ -1563,7 +1599,7 @@
   .btn-clear  { font-size: 12px; color: #bfb49a; background: none; border: 1px solid #2a5a3a; border-radius: 4px; padding: 1px 8px; margin-top: 2px; }
 
   /* SIDE BETS */
-  .cards-area { position: relative; display: flex; align-items: flex-start; flex-direction: row; gap: 8px; }
+  .cards-area { position: relative; display: flex; align-items: flex-start; flex-direction: row; gap: 4px; }
   .sb-col     { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
   .cards-col  { min-width: 104px; display: flex; flex-direction: column; align-items: center; }
 
@@ -1593,6 +1629,28 @@
   }
   .sb-box-label { font-size: 12px; font-weight: 700; text-align: center; line-height: 1.2; font-family: 'Oswald', sans-serif; letter-spacing: 0.04em; text-transform: uppercase; }
   .sb-box-amt   { font-size: 14px; font-weight: 700; color: #e8d48b; }
+  .sb-box-editing {
+    width: 72px; min-height: 52px;
+    border-radius: 7px;
+    border: 1.5px solid #d4a840;
+    background: rgba(212,168,64,0.12);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 3px; padding: 5px 4px;
+    color: #f2e8d0;
+  }
+  .sb-wager-input {
+    width: 60px;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(232,212,139,0.4);
+    border-radius: 4px;
+    color: #f2e8d0;
+    font-family: inherit;
+    font-size: 13px;
+    text-align: center;
+    padding: 3px 4px;
+    outline: none;
+  }
+  .sb-wager-input:focus { border-color: #d4a840; box-shadow: 0 0 6px rgba(212,168,64,0.3); }
 
   /* Invisible spacer mirrors ghost width so card stacks stay at true screen center */
   .ghost-spacer { width: 104px; flex-shrink: 0; visibility: hidden; pointer-events: none; }

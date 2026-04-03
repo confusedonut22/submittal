@@ -507,6 +507,18 @@ export function clearSideBet(idx, key) {
   ));
 }
 
+export function setSideBetAmount(idx, key, amount) {
+  if (get(replayMode)) return;
+  if (get(phase) !== PHASE.BET) return;
+  const config = get(runtimeConfig);
+  hands.update(hs => hs.map((h, i) => {
+    if (i !== idx) return h;
+    if (amount <= 0) return { ...h, sb: { ...h.sb, [key]: 0 } };
+    if (!isAllowedStakeSideBet(amount, key, config)) return h;
+    return { ...h, sb: { ...h.sb, [key]: amount } };
+  }));
+}
+
 export function addChip(idx, value) {
   if (get(replayMode)) return;
   if (get(phase) !== PHASE.BET) return;
