@@ -98,7 +98,14 @@
   $: isFour = $numSlots === 4;
   $: cardsRowMinH     = isDesktop ? (isFour ? 110 : (multi ? (isWideDesktop ? 138 : 164) : (isWideDesktop ? 185 : 218))) : (isFour ? 80 : (multi ? 113 : 146));
   $: handColMaxW      = isDesktop ? (multi ? (isWideDesktop ? '325px' : '390px') : (isWideDesktop ? '507px' : '598px')) : (multi ? '260px' : '416px');
-  $: canDouble = activeH && activeH.cards.length === 2 && $balance >= activeH.bet;
+  $: canDouble = (() => {
+    if (!activeH || activeH.cards.length !== 2 || $balance < activeH.bet) return false;
+    if (activeH.doubled) return false;
+    const total = handValue(activeH.cards);
+    const soft = isSoft(activeH.cards);
+    if (soft) return false;
+    return total === 9 || total === 10 || total === 11;
+  })();
   $: canSplit  = activeH && activeH.cards.length === 2 && $balance >= activeH.bet && $numSlots < $maxHands &&
                  activeH.cards[0].rank === activeH.cards[1].rank;
   $: isBadBeat = isResult && $message;
@@ -486,7 +493,7 @@
     {#if !isBet}
       <div class="divider-row">
         <div class="divider-line"></div>
-        <span class="divider-label">Blackjack pays 3 to 2</span>
+        <span class="divider-label">Blackjack pays 7 to 5</span>
         <div class="divider-line"></div>
       </div>
     {/if}
@@ -748,7 +755,7 @@
           </div>
 
           <div class="rules-section"><strong>Blackjack</strong>
-            <div class="rules-text">If your first two cards are an Ace and any 10-value card, that's a Blackjack, the best hand in the game. It pays 3:2, meaning a $10 bet wins $15.</div>
+            <div class="rules-text">If your first two cards are an Ace and any 10-value card, that's a Blackjack, the best hand in the game. It pays 7:5, meaning a $10 bet wins $14.</div>
           </div>
 
           <div class="rules-section"><strong>Insurance</strong>
@@ -760,7 +767,7 @@
 
           <div class="rules-section"><strong>Payouts</strong>
             <div class="rules-text">
-              Blackjack pays 3:2<br/>
+              Blackjack pays 7:5<br/>
               Winning hand pays 1:1<br/>
               Insurance pays 2:1
             </div>

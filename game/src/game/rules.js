@@ -15,7 +15,7 @@ export const RANK_VALUES = {
 
 export const NUM_DECKS = 6;
 export const RESHUFFLE_THRESHOLD = 52;
-export const BJ_MULTIPLIER = 1.5; // 3:2
+export const BJ_MULTIPLIER = 1.4; // 7:5
 
 export const PHASE = {
   INTRO:  "INTRO",
