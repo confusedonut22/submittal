@@ -349,7 +349,7 @@
       {/if}
       <button class="btn-tab btn-utility" class:active={$showRules} on:click={toggleRulesPanel}>Rules</button>
       {#if !isReplay}
-        <button class="btn-tab btn-utility" class:active={$showFacts} on:click={toggleFacts}>Fact</button>
+        <button class="btn-tab btn-utility btn-fact" class:active={$showFacts} on:click={toggleFacts}>Fact</button>
       {/if}
       <button class="btn-tab btn-utility btn-mute" class:muted={soundMuted} on:click={onToggleMute}>{soundMuted ? 'Unmute' : 'Sound'}</button>
       <button class="btn-tab btn-utility" class:active={showAbout} on:click={toggleAbout}>About</button>
@@ -1053,6 +1053,7 @@
     min-width: unset !important;
   }
   .btn-mute.muted { opacity: 0.45; }
+  .btn-fact { font-size: 16px !important; padding: 7px 20px !important; min-height: 42px !important; }
   .session-meta {
     display: flex;
     flex-wrap: wrap;
