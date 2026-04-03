@@ -524,46 +524,8 @@
         {@const activeSb = sbSelect[idx]}
         <div class="hand-col">
 
-          <!-- Cards area with side bet boxes on left -->
+          <!-- Cards area -->
           <div class="cards-area">
-            <!-- Side bet boxes: only show when betting or when a side bet is active -->
-            {#if isBet || isResult || hand.sb.pp > 0 || hand.sb.t > 0}
-            <div class="sb-col">
-              {#each [{k:"pp", n:"Perfect Pairs"}, {k:"t", n:"21+3"}] as sb}
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <!-- svelte-ignore a11y-no-static-element-interactions -->
-                {#if (isBet || isResult) && activeSb === sb.k}
-                  <!-- Expanded: show inline wager input -->
-                  <div class="sb-box sb-box-editing" on:click|stopPropagation>
-                    <span class="sb-box-label">{sb.n}</span>
-                    <input
-                      class="sb-wager-input"
-                      inputmode="decimal"
-                      placeholder="0.00"
-                      value={sbDraft[idx + sb.k] ?? ''}
-                      on:input={(e) => onSbDraftInput(idx, sb.k, e.currentTarget.value)}
-                      on:keydown={(e) => e.key === 'Enter' && commitSbDraft(idx, sb.k)}
-                      on:blur={() => commitSbDraft(idx, sb.k)}
-                      autofocus
-                    />
-                  </div>
-                {:else}
-                  <div
-                    class="sb-box"
-                    class:sb-active={hand.sb[sb.k] > 0}
-                    on:click={() => !isReplay && (isBet || isResult) && toggleSbSelect(idx, sb.k)}
-                  >
-                    <span class="sb-box-label">{sb.n}</span>
-                    {#if hand.sb[sb.k] > 0}
-                      <span class="sb-box-amt">{fmt(hand.sb[sb.k], $runtimeCurrency)}</span>
-                    {/if}
-                  </div>
-                {/if}
-              {/each}
-            </div>
-            {/if}
-
-            <!-- Cards column — everything here centers under the card stack -->
             <div class="cards-col">
               <!-- Hand value bubble -->
               {#if hand.cards.length > 0}
@@ -572,7 +534,44 @@
                 </div>
               {/if}
 
-              <div class="cards-row" style="min-height: {cardsRowMinH}px">
+              <!-- sb-col sits beside cards-row in a shared flex row for vertical centering -->
+              <div class="sb-and-cards">
+                {#if isBet || isResult || hand.sb.pp > 0 || hand.sb.t > 0}
+                <div class="sb-col">
+                  {#each [{k:"pp", n:"Perfect Pairs"}, {k:"t", n:"21+3"}] as sb}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <!-- svelte-ignore a11y-no-static-element-interactions -->
+                    {#if (isBet || isResult) && activeSb === sb.k}
+                      <!-- Expanded: show inline wager input -->
+                      <div class="sb-box sb-box-editing" on:click|stopPropagation>
+                        <span class="sb-box-label">{sb.n}</span>
+                        <input
+                          class="sb-wager-input"
+                          inputmode="decimal"
+                          placeholder="0.00"
+                          value={sbDraft[idx + sb.k] ?? ''}
+                          on:input={(e) => onSbDraftInput(idx, sb.k, e.currentTarget.value)}
+                          on:keydown={(e) => e.key === 'Enter' && commitSbDraft(idx, sb.k)}
+                          on:blur={() => commitSbDraft(idx, sb.k)}
+                          autofocus
+                        />
+                      </div>
+                    {:else}
+                      <div
+                        class="sb-box"
+                        class:sb-active={hand.sb[sb.k] > 0}
+                        on:click={() => !isReplay && (isBet || isResult) && toggleSbSelect(idx, sb.k)}
+                      >
+                        <span class="sb-box-label">{sb.n}</span>
+                        {#if hand.sb[sb.k] > 0}
+                          <span class="sb-box-amt">{fmt(hand.sb[sb.k], $runtimeCurrency)}</span>
+                        {/if}
+                      </div>
+                    {/if}
+                  {/each}
+                </div>
+                {/if}
+                <div class="cards-row" style="min-height: {cardsRowMinH}px">
                 {#if hand.cards.length > 0}
                   {#each hand.cards as card, i}
                     <div class="card-wrap" style="margin-left: {i > 0 ? (multi ? cardOverlapSmall : cardOverlap) : '0'}; z-index: {i}">
@@ -593,7 +592,8 @@
                   <div class="card-placeholder" class:small={multi}></div>
                   <div class="card-placeholder" class:small={multi} style="margin-left: {multi ? cardOverlapSmall : cardOverlap}; opacity: 0.5"></div>
                 {/if}
-              </div>
+              </div><!-- end cards-row -->
+              </div><!-- end sb-and-cards -->
 
               <!-- Payout -->
               {#if hand.payout > 0 && isResult}
@@ -665,8 +665,8 @@
               {#if (isBet || isResult) && !isReplay && $numSlots > 1}
                 <button class="btn-remove" on:click={() => removeSlot(idx)}>Remove</button>
               {/if}
-            </div>
-          </div>
+            </div><!-- end cards-col -->
+          </div><!-- end cards-area -->
         </div>
       {/each}
 
@@ -1605,8 +1605,8 @@
   .btn-clear  { font-size: 12px; color: #bfb49a; background: none; border: 1px solid #2a5a3a; border-radius: 4px; padding: 1px 8px; margin-top: 2px; }
 
   /* SIDE BETS */
-  .cards-area { position: relative; display: flex; align-items: flex-start; flex-direction: row; gap: 4px; }
-  .sb-col { align-self: center; }
+  .cards-area { position: relative; }
+  .sb-and-cards { display: flex; flex-direction: row; align-items: center; gap: 4px; }
   .sb-col     { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
   .cards-col  { min-width: 104px; display: flex; flex-direction: column; align-items: center; }
 
