@@ -87,9 +87,9 @@ function drawFelt(stage, w, h) {
    .lineTo(w * 0.95, h * 0.52)
    .stroke({ color: GOLD, alpha: 0.08, width: 1 });
 
-  // "Blackjack pays 3 to 2" text
+  // "Blackjack pays 7 to 5" text
   const label = new PIXI.Text({
-    text: "Blackjack pays 3 to 2",
+    text: "Blackjack pays 7 to 5",
     style: new PIXI.TextStyle({
       fontFamily: "Caveat, cursive",
       fontSize: 14,
