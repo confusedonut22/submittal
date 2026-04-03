@@ -1605,7 +1605,8 @@
   .btn-clear  { font-size: 12px; color: #bfb49a; background: none; border: 1px solid #2a5a3a; border-radius: 4px; padding: 1px 8px; margin-top: 2px; }
 
   /* SIDE BETS */
-  .cards-area { position: relative; display: flex; align-items: center; flex-direction: row; gap: 4px; }
+  .cards-area { position: relative; display: flex; align-items: flex-start; flex-direction: row; gap: 4px; }
+  .sb-col { align-self: center; }
   .sb-col     { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
   .cards-col  { min-width: 104px; display: flex; flex-direction: column; align-items: center; }
 

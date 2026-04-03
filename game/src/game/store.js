@@ -530,7 +530,8 @@ export function addChip(idx, value) {
 
 export function setBetLevel(idx, value) {
   if (get(replayMode)) return;
-  if (get(phase) !== PHASE.BET) return;
+  const p = get(phase);
+  if (p !== PHASE.BET && p !== PHASE.RESULT) return;
   const config = get(runtimeConfig);
   if (!isAllowedStakeBet(value, config)) return;
   hands.update(hs => hs.map((h, i) =>
@@ -540,7 +541,8 @@ export function setBetLevel(idx, value) {
 
 export function adjustBetByFactor(idx, factor) {
   if (get(replayMode)) return;
-  if (get(phase) !== PHASE.BET) return;
+  const p = get(phase);
+  if (p !== PHASE.BET && p !== PHASE.RESULT) return;
   const config = get(runtimeConfig);
   hands.update((hs) => hs.map((h, i) => {
     if (i !== idx) return h;
