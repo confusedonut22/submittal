@@ -1244,6 +1244,8 @@
     text-align: center;
     font-family: 'Oswald', sans-serif;
     letter-spacing: 0.02em;
+    min-height: 29px;
+    box-sizing: border-box;
   }
   .hv-bubble.active {
     background: rgba(212,168,64,0.15);
@@ -1741,7 +1743,7 @@
 
   .ghost-wrap { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 32px; }
   .ghost {
-    width: 104px; height: 146px; border-radius: 8px;
+    width: 104px; height: 200px; border-radius: 8px;
     border: 3px dashed rgba(242,232,208,0.55);
     background: rgba(242,232,208,0.04);
     cursor: pointer;
