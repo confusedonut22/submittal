@@ -868,7 +868,14 @@
       {/if}
 
 
-      <!-- Play / Action buttons — fixed height container prevents layout jump -->
+      <!-- Stop bar: always in DOM, rigid, visible only during autoplay -->
+      <button
+        class="btn-stop-bar"
+        class:btn-stop-bar-hidden={!$autoPlay || isReplay || autoplayDisabled}
+        on:click={() => autoPlay.set(false)}
+      >■ Stop Auto</button>
+
+      <!-- Play / Action buttons -->
       <div class="action-area-fixed">
         {#if isPlay && !$autoPlay && activeH && !isReplay}
           <div class="action-grid">
@@ -877,11 +884,7 @@
             <button class="btn-action" class:dim={!canSplit} disabled={!canSplit} on:click={canSplit ? split : undefined}>Split</button>
             <button class="btn-action" class:dim={!canDouble} disabled={!canDouble} on:click={canDouble ? doubleDown : undefined}>x2</button>
           </div>
-        {:else if $autoPlay && !isReplay && !autoplayDisabled}
-          <!-- Full-width red stop bar during autoplay -->
-          <button class="btn-stop-bar" on:click={() => autoPlay.set(false)}>■ Stop Auto</button>
         {:else}
-          <!-- Spacer to hold layout -->
           <div class="action-area-spacer"></div>
         {/if}
       </div>
@@ -1741,14 +1744,14 @@
   .ghost-wrap { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 32px; }
   .ghost {
     width: 104px; height: 146px; border-radius: 8px;
-    border: 2px dashed rgba(242,232,208,0.15);
-    background: rgba(242,232,208,0.03);
+    border: 3px dashed rgba(242,232,208,0.55);
+    background: rgba(242,232,208,0.04);
     cursor: pointer;
     display: flex; align-items: center; justify-content: center;
-    font-size: 28px; color: #f2e8d0; opacity: 0.2;
+    font-size: 28px; color: #f2e8d0; opacity: 0.7;
     transition: all 0.2s;
   }
-  .ghost:hover { opacity: 0.4; }
+  .ghost:hover { opacity: 1; }
 
   .btn-remove { font-size: 13px; color: #bfb49a; background: none; border: 1px solid #2a5a3a; border-radius: 4px; padding: 2px 10px; margin-top: 4px; opacity: 0.5; }
   .btn-remove-right {
@@ -1807,6 +1810,7 @@
     transition: background 0.15s;
   }
   .btn-stop-bar:hover { background: #e53935; }
+  .btn-stop-bar-hidden { visibility: hidden; pointer-events: none; }
   /* Fact bar — pinned bottom strip, no border */
   .fact-below-actions {
     width: 100%;
