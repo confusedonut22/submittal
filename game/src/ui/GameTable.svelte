@@ -1163,8 +1163,8 @@
 
   /* DEALER */
   .dealer-area { min-height: 112px; position: relative; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 16px; }
-  .dealer-area-hidden { min-height: 0 !important; overflow: hidden; }
-  .dealer-area-hidden .dealer-placeholder { height: 0; }
+  .dealer-area-hidden { visibility: hidden; }
+  /* dealer-placeholder keeps height when hidden */
   .dealer-placeholder { height: 96px; }
 
   /* CARDS */
@@ -1741,7 +1741,7 @@
   /* Invisible spacer mirrors ghost width so card stacks stay at true screen center */
   .ghost-spacer { width: 104px; flex-shrink: 0; visibility: hidden; pointer-events: none; }
 
-  .ghost-wrap { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 26px; }
+  .ghost-wrap { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 28px; }
   .ghost {
     width: 104px; height: 146px; border-radius: 8px;
     border: 3px dashed rgba(242,232,208,0.55);
