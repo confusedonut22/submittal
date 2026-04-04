@@ -92,8 +92,8 @@
   $: netNegative = $netPosition < 0;
 
   // ─── RESPONSIVE INLINE STYLE VALUES ───
-  $: cardOverlap      = isDesktop ? (isWideDesktop ? '-21px' : '-26px') : '-18px';
-  $: cardOverlapSmall = isDesktop ? (isWideDesktop ? '-14px' : '-17px') : '-13px';
+  $: cardOverlap      = isDesktop ? (isWideDesktop ? '-52px' : '-57px') : '-18px';
+  $: cardOverlapSmall = isDesktop ? (isWideDesktop ? '-38px' : '-41px') : '-13px';
   $: dealerOverlap    = isDesktop ? (isWideDesktop ? '-23px' : '-29px') : '-18px';
   $: isFour = $numSlots === 4;
   $: cardsRowMinH     = isDesktop ? (isFour ? 110 : (multi ? (isWideDesktop ? 138 : 164) : (isWideDesktop ? 185 : 218))) : (isFour ? 80 : (multi ? 113 : 146));
