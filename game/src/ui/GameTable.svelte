@@ -1949,6 +1949,7 @@
     .hand-value         { font-size: 20px; padding: 3px 14px; }
 
     .card        { width: 120px; height: 220px; border-radius: 10px; }
+    .dealer-cards-row .card { width: 110px !important; height: 160px !important; }
     .card.small  { width: 90px; height: 126px; }
 
     .card-tl     { top: 11px; left: 13px; }
