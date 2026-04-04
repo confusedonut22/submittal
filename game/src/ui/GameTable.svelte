@@ -463,15 +463,18 @@
     <!-- DEALER AREA -->
     <div class="dealer-area" class:dealer-area-hidden={isBet}>
       {#if $dealerHand.length > 0}
-        <div class="hand-value">{dealerDisplay}</div>
-        <div class="cards-row">
-          {#each $dealerHand as card, i}
-            <div class="card-wrap" style="margin-left: {i > 0 ? dealerOverlap : '0'}; z-index: {i}">
-              {#if (isPlay || isIns) && i === 1}
-                <div class="card card-hidden">
-                  <img src={LOGO_IMAGE} alt="" class="card-back-logo" />
-                </div>
-              {:else}
+        <!-- Logo moves left of dealer cards once dealt -->
+        <img src={LOGO_IMAGE} alt="Chad Labs" class="dealer-logo" />
+        <div class="dealer-cards-col">
+          <div class="hand-value">{dealerDisplay}</div>
+          <div class="cards-row">
+            {#each $dealerHand as card, i}
+              <div class="card-wrap" style="margin-left: {i > 0 ? dealerOverlap : '0'}; z-index: {i}">
+                {#if (isPlay || isIns) && i === 1}
+                  <div class="card card-hidden">
+                    <img src={LOGO_IMAGE} alt="" class="card-back-logo" />
+                  </div>
+                {:else}
                   <div class="card card-face" class:red={card.suit === 'diamonds' || card.suit === 'hearts'}>
                     <div class="card-corner card-tl">
                       <span class="card-rank">{card.rank}</span>
@@ -483,16 +486,17 @@
                       <span class="card-suit-sm">{card.suit === 'diamonds' ? '♦' : card.suit === 'hearts' ? '♥' : card.suit === 'clubs' ? '♣' : '♠'}</span>
                     </div>
                   </div>
-              {/if}
-            </div>
-          {/each}
+                {/if}
+              </div>
+            {/each}
+          </div>
         </div>
       {:else}
         <div class="dealer-placeholder"></div>
       {/if}
     </div>
 
-    <!-- CHAD LABS LOGO — bet screen only -->
+    <!-- CHAD LABS LOGO — bet screen only (centered) -->
     {#if isBet}
       <div class="felt-logo-row">
         <img src={LOGO_IMAGE} alt="Chad Labs" class="felt-logo felt-logo-large" />
@@ -892,11 +896,6 @@
         {/if}
       </div>
 
-      <!-- Fact bar — always visible when enabled -->
-      {#if $showFacts && $fact}
-        <div class="fact-below-actions" on:click|stopPropagation>{$fact}</div>
-      {/if}
-
       <!-- Deal button -->
       {#if (isBet || isResult) && !isReplay}
         <div class="center-deal-wrap">
@@ -909,6 +908,11 @@
             {dealLabel}
           </button>
         </div>
+      {/if}
+
+      <!-- Fact bar — below deal button, only visible after cards dealt -->
+      {#if $showFacts && $fact && !isBet}
+        <div class="fact-below-actions" on:click|stopPropagation>{$fact}</div>
       {/if}
     </div>
   </div>
@@ -1121,7 +1125,7 @@
     display: flex;
     flex-direction: column;
     padding: 4px 14px 0;
-    padding-bottom: 200px;
+    padding-bottom: 240px;
     background: radial-gradient(ellipse at 50% 35%, #153d24, #0c2616 55%, #071a0e 100%);
     transform-origin: top center;
     overflow-y: auto;
@@ -1165,7 +1169,7 @@
   }
 
   /* DEALER */
-  .dealer-area { min-height: 112px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .dealer-area { min-height: 112px; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 16px; }
   .dealer-area-hidden { min-height: 0 !important; overflow: hidden; }
   .dealer-area-hidden .dealer-placeholder { height: 0; }
   .dealer-placeholder { height: 96px; }
@@ -1177,7 +1181,7 @@
   .card {
     border-radius: 8px;
     width: 104px;
-    height: 175px;
+    height: 200px;
     position: relative;
     overflow: hidden;
     animation: cardIn 0.22s ease both;
@@ -1230,7 +1234,7 @@
   .card-face:not(.red) .card-center { color: #1b1b1b; }
 
   .card-placeholder {
-    width: 104px; height: 175px;
+    width: 104px; height: 200px;
     border-radius: 8px;
     border: 1.5px dashed rgba(242,232,208,0.12);
     background: rgba(242,232,208,0.03);
@@ -1290,6 +1294,21 @@
     height: 230px;
     opacity: 0.95;
     filter: drop-shadow(0 0 24px rgba(212,168,64,0.55));
+  }
+
+  /* DEALER LOGO — left of dealer cards */
+  .dealer-logo {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    opacity: 0.85;
+    filter: drop-shadow(0 0 12px rgba(212,168,64,0.45));
+    flex-shrink: 0;
+  }
+  .dealer-cards-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
   /* DIVIDER — play screen */
@@ -1775,7 +1794,7 @@
     width: 100%;
     max-width: 912px;
     margin: 0 auto;
-    height: 65px;
+    height: 50px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1902,11 +1921,12 @@
     .balance-row { min-height: 44px; padding: 8px 24px 0; }
     .session-pill { font-size: 14px; }
 
-    .dealer-area        { min-height: 118px; }
+    .dealer-area        { min-height: 118px; gap: 20px; }
+    .dealer-logo        { width: 100px; height: 100px; }
     .dealer-placeholder { height: 106px; }
     .hand-value         { font-size: 20px; padding: 3px 14px; }
 
-    .card        { width: 120px; height: 170px; border-radius: 10px; }
+    .card        { width: 120px; height: 195px; border-radius: 10px; }
     .card.small  { width: 90px; height: 126px; }
 
     .card-tl     { top: 11px; left: 13px; }
@@ -1921,7 +1941,7 @@
     .card.small .card-suit-sm { font-size: 14px; }
     .card.small .card-center  { font-size: 35px; }
 
-    .card-placeholder       { width: 120px; height: 170px; }
+    .card-placeholder       { width: 120px; height: 195px; }
     .card-placeholder.small { width: 90px; height: 126px; }
 
     .hands-row      { min-height: 0; gap: 32px; }
