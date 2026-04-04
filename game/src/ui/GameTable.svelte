@@ -96,7 +96,7 @@
   $: cardOverlapSmall = isDesktop ? (isWideDesktop ? '-34px' : '-37px') : '-13px';
   $: dealerOverlap    = isDesktop ? (isWideDesktop ? '-23px' : '-29px') : '-18px';
   $: isFour = $numSlots === 4;
-  $: cardsRowMinH     = isDesktop ? (isFour ? 98 : (multi ? (isWideDesktop ? 123 : 146) : (isWideDesktop ? 165 : 195))) : (isFour ? 80 : (multi ? 113 : 146));
+  $: cardsRowMinH     = isDesktop ? (isFour ? 110 : (multi ? (isWideDesktop ? 138 : 164) : (isWideDesktop ? 185 : 220))) : (isFour ? 80 : (multi ? 113 : 146));
   $: handColMaxW      = isDesktop ? (multi ? (isWideDesktop ? '325px' : '390px') : (isWideDesktop ? '507px' : '598px')) : (multi ? '260px' : '416px');
   $: canDouble = (() => {
     if (!activeH || activeH.cards.length !== 2 || $balance < activeH.bet) return false;
@@ -406,7 +406,7 @@
   {/if}
 
   <!-- FELT AREA -->
-  <div class="felt" on:click={closePanels}>
+  <div class="felt" class:fact-active={$showFacts && !isBet} on:click={closePanels}>
 
     <!-- INSURANCE MODAL — centered overlay -->
     {#if isIns && !isReplay}
@@ -616,7 +616,7 @@
 
               <!-- Wager controls: 1/2·Bet·2x first, then dollar amount below -->
               {#if hand.bet > 0 || isBet || isResult}
-                <div class="bet-bar">
+                <div class="bet-bar" class:bet-bar-offset={isBet || isResult}>
                   {#if (isBet || isResult) && !isReplay && !activeSb}
                     <div class="bet-amount-row bet-amount-row-with-actions">
                       <button class="bet-quick-btn" on:click={() => adjustBetByFactor(idx, 0.5)}>1/2</button>
@@ -872,23 +872,17 @@
       {/if}
 
 
-      <!-- Play / Action buttons — fixed height container prevents layout jump -->
-      <div class="action-area-fixed">
-        {#if isPlay && !$autoPlay && activeH && !isReplay}
-          <div class="action-grid">
-            <button class="btn-action" on:click={hit}>Hit</button>
-            <button class="btn-action" on:click={stand}>Stand</button>
-            <button class="btn-action" class:dim={!canSplit} disabled={!canSplit} on:click={canSplit ? split : undefined}>Split</button>
-            <button class="btn-action" class:dim={!canDouble} disabled={!canDouble} on:click={canDouble ? doubleDown : undefined}>x2</button>
-          </div>
-        {:else if $autoPlay && !isReplay && !autoplayDisabled}
-          <!-- Full-width red stop bar during autoplay -->
-          <button class="btn-stop-bar" on:click={() => autoPlay.set(false)}>■ Stop Auto</button>
-        {:else}
-          <!-- Spacer to hold layout -->
-          <div class="action-area-spacer"></div>
-        {/if}
-      </div>
+      <!-- Play / Action buttons -->
+      {#if isPlay && !$autoPlay && activeH && !isReplay}
+        <div class="action-grid">
+          <button class="btn-action" on:click={hit}>Hit</button>
+          <button class="btn-action" on:click={stand}>Stand</button>
+          <button class="btn-action" class:dim={!canSplit} disabled={!canSplit} on:click={canSplit ? split : undefined}>Split</button>
+          <button class="btn-action" class:dim={!canDouble} disabled={!canDouble} on:click={canDouble ? doubleDown : undefined}>x2</button>
+        </div>
+      {:else if $autoPlay && !isReplay && !autoplayDisabled}
+        <button class="btn-stop-bar" on:click={() => autoPlay.set(false)}>■ Stop Auto</button>
+      {/if}
 
       <!-- Deal button -->
       {#if (isBet || isResult) && !isReplay}
@@ -1136,6 +1130,8 @@
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
   }
+  /* When fact bar is visible, reduce bottom padding so cards arent clipped */
+  .felt.fact-active { padding-bottom: 140px; }
   .felt-menu {
     display: flex;
     flex-direction: row;
@@ -1948,7 +1944,7 @@
     .dealer-placeholder { height: 106px; }
     .hand-value         { font-size: 20px; padding: 3px 14px; }
 
-    .card        { width: 120px; height: 195px; border-radius: 10px; }
+    .card        { width: 135px; height: 220px; border-radius: 11px; }
     .card.small  { width: 90px; height: 126px; }
 
     .card-tl     { top: 11px; left: 13px; }
@@ -1963,7 +1959,7 @@
     .card.small .card-suit-sm { font-size: 14px; }
     .card.small .card-center  { font-size: 35px; }
 
-    .card-placeholder       { width: 120px; height: 195px; }
+    .card-placeholder       { width: 135px; height: 220px; }
     .card-placeholder.small { width: 90px; height: 126px; }
 
     .hands-row      { min-height: 0; gap: 32px; }
@@ -1992,7 +1988,7 @@
     .ghost-spacer { width: 120px; }
     .cards-col { min-width: 120px; }
     /* Center bet-bar under cards-row by offsetting sb-col width (80px + 8px gap) */
-    .bet-bar { padding-left: 88px; }
+    .bet-bar.bet-bar-offset { padding-left: 88px; }
 
     .fact-row.table-layout {
       width: min(960px, 100%);
