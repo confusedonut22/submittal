@@ -490,6 +490,12 @@
               </div>
             {/each}
           </div>
+          <!-- Result message to the right of dealer cards -->
+          {#if $message && isResult}
+            <div class="dealer-result-msg">
+              <span class="dealer-result-text" class:win={$message === 'You Win!' || $message === 'Push'} class:lose={$message === 'Dealer Wins'}>{$message}</span>
+            </div>
+          {/if}
         </div>
       {:else}
         <div class="dealer-placeholder"></div>
@@ -518,12 +524,7 @@
 
     <!-- INSURANCE PROMPT (per-hand, handled inline per card + bottom dock) -->
 
-    <!-- RESULT MESSAGE -->
-    <div class="result-msg">
-      {#if $message && isResult}
-        <span class="msg-text" class:bad-beat={isBadBeat}>{$message}</span>
-      {/if}
-    </div>
+    <!-- Result message moved inline with dealer cards -->
 
 
     <!-- PLAYER HANDS -->
@@ -613,12 +614,9 @@
 
 
 
-              <!-- Wager label -->
+              <!-- Wager controls: 1/2·Bet·2x first, then dollar amount below -->
               {#if hand.bet > 0 || isBet || isResult}
                 <div class="bet-bar">
-                  <div class="wager-label wager-label-top">
-                    {fmt(hand.bet, $runtimeCurrency)}{activeSb ? ` · ${activeSb === 'pp' ? 'PP' : '21+3'} ${fmt(hand.sb[activeSb], $runtimeCurrency)}` : ''}
-                  </div>
                   {#if (isBet || isResult) && !isReplay && !activeSb}
                     <div class="bet-amount-row bet-amount-row-with-actions">
                       <button class="bet-quick-btn" on:click={() => adjustBetByFactor(idx, 0.5)}>1/2</button>
@@ -636,8 +634,10 @@
                       </div>
                       <button class="bet-quick-btn" on:click={() => adjustBetByFactor(idx, 2)}>2x</button>
                     </div>
-
                   {/if}
+                  <div class="wager-label wager-label-top">
+                    {fmt(hand.bet, $runtimeCurrency)}{activeSb ? ` · ${activeSb === 'pp' ? 'PP' : '21+3'} ${fmt(hand.sb[activeSb], $runtimeCurrency)}` : ''}
+                  </div>
                 </div>
               {/if}
 
@@ -1166,7 +1166,7 @@
   }
 
   /* DEALER */
-  .dealer-area { min-height: 112px; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 16px; }
+  .dealer-area { min-height: 112px; position: relative; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 16px; }
   .dealer-area-hidden { min-height: 0 !important; overflow: hidden; }
   .dealer-area-hidden .dealer-placeholder { height: 0; }
   .dealer-placeholder { height: 96px; }
@@ -1293,21 +1293,38 @@
     filter: drop-shadow(0 0 24px rgba(212,168,64,0.55));
   }
 
-  /* DEALER LOGO — left of dealer cards */
+  /* DEALER LOGO — fixed to left side */
   .dealer-logo {
-    width: 130px;
-    height: 130px;
+    position: absolute;
+    left: 0;
+    width: 110px;
+    height: 110px;
     object-fit: contain;
     opacity: 0.9;
     filter: drop-shadow(0 0 16px rgba(212,168,64,0.5));
-    flex-shrink: 0;
-    margin-right: 40px;
   }
   .dealer-cards-col {
     display: flex;
     flex-direction: column;
     align-items: center;
   }
+
+  /* INLINE DEALER RESULT MESSAGE */
+  .dealer-result-msg {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 12px;
+  }
+  .dealer-result-text {
+    font-family: 'Oswald', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    animation: fadeIn 0.3s ease;
+  }
+  .dealer-result-text.win  { color: #66ff88; }
+  .dealer-result-text.lose { color: #ef5350; }
 
   /* DIVIDER — play screen */
   .divider-row {
@@ -1920,7 +1937,7 @@
     .session-pill { font-size: 14px; }
 
     .dealer-area        { min-height: 118px; gap: 24px; }
-    .dealer-logo        { width: 150px; height: 150px; }
+    .dealer-logo        { width: 120px; height: 120px; left: 0; }
     .dealer-placeholder { height: 106px; }
     .hand-value         { font-size: 20px; padding: 3px 14px; }
 
