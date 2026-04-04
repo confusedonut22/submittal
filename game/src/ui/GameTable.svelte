@@ -1125,7 +1125,7 @@
     display: flex;
     flex-direction: column;
     padding: 4px 14px 0;
-    padding-bottom: 240px;
+    padding-bottom: 220px;
     background: radial-gradient(ellipse at 50% 35%, #153d24, #0c2616 55%, #071a0e 100%);
     transform-origin: top center;
     overflow-y: auto;
@@ -1298,11 +1298,11 @@
 
   /* DEALER LOGO — left of dealer cards */
   .dealer-logo {
-    width: 80px;
-    height: 80px;
+    width: 130px;
+    height: 130px;
     object-fit: contain;
-    opacity: 0.85;
-    filter: drop-shadow(0 0 12px rgba(212,168,64,0.45));
+    opacity: 0.9;
+    filter: drop-shadow(0 0 16px rgba(212,168,64,0.5));
     flex-shrink: 0;
   }
   .dealer-cards-col {
@@ -1921,8 +1921,8 @@
     .balance-row { min-height: 44px; padding: 8px 24px 0; }
     .session-pill { font-size: 14px; }
 
-    .dealer-area        { min-height: 118px; gap: 20px; }
-    .dealer-logo        { width: 100px; height: 100px; }
+    .dealer-area        { min-height: 118px; gap: 24px; }
+    .dealer-logo        { width: 150px; height: 150px; }
     .dealer-placeholder { height: 106px; }
     .hand-value         { font-size: 20px; padding: 3px 14px; }
 
