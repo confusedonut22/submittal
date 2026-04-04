@@ -1121,7 +1121,7 @@
     display: flex;
     flex-direction: column;
     padding: 4px 14px 0;
-    padding-bottom: 140px;
+    padding-bottom: 200px;
     background: radial-gradient(ellipse at 50% 35%, #153d24, #0c2616 55%, #071a0e 100%);
     transform-origin: top center;
     overflow-y: auto;
@@ -1605,7 +1605,7 @@
     border-radius: 12px;
     background: rgba(8, 20, 12, 0.72);
     border: 1px solid rgba(232, 212, 139, 0.18);
-    transform: translateX(6px);
+
   }
   .bet-amount-prefix {
     position: absolute;
@@ -1726,8 +1726,10 @@
 
   /* BOTTOM DOCK */
   .bottom-dock {
-    position: sticky;
+    position: fixed;
     bottom: 0;
+    left: 0;
+    right: 0;
     flex-shrink: 0;
     padding: 0 4px 8px;
     z-index: 10;
