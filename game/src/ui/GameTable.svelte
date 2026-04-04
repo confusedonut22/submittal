@@ -463,7 +463,7 @@
         <img src={LOGO_IMAGE} alt="Chad Labs" class="dealer-logo" />
         <div class="dealer-cards-col">
           <div class="hand-value">{dealerDisplay}</div>
-          <div class="cards-row">
+          <div class="cards-row dealer-cards-row" class:dealer-cards-shrink={multi}>
             {#each $dealerHand as card, i}
               <div class="card-wrap" style="margin-left: {i > 0 ? dealerOverlap : '0'}; z-index: {i}">
                 {#if (isPlay || isIns) && i === 1}
@@ -634,9 +634,7 @@
                       <button class="bet-quick-btn" on:click={() => adjustBetByFactor(idx, 2)}>2x</button>
                     </div>
                   {/if}
-                  <div class="wager-label wager-label-top">
-                    {fmt(hand.bet, $runtimeCurrency)}{activeSb ? ` · ${activeSb === 'pp' ? 'PP' : '21+3'} ${fmt(hand.sb[activeSb], $runtimeCurrency)}` : ''}
-                  </div>
+
                 </div>
               {/if}
 
@@ -1163,6 +1161,7 @@
 
   /* DEALER */
   .dealer-area { min-height: 112px; position: relative; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 16px; }
+  .dealer-cards-row.dealer-cards-shrink { transform: scale(0.72); transform-origin: center center; }
   .dealer-area-hidden { min-height: 0 !important; overflow: hidden; }
   .dealer-area-hidden .dealer-placeholder { height: 0; }
   .dealer-placeholder { height: 96px; }
