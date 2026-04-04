@@ -413,7 +413,18 @@
       <div class="ins-modal" on:click={stopEvent}>
         <div class="ins-modal-title">Dealer shows an Ace</div>
         <div class="ins-modal-sub">Take insurance against a Blackjack?</div>
-        {#if $numSlots > 1}
+        {#if $numSlots === 1}
+          <!-- Single hand: two clear buttons -->
+          <div class="ins-two-btns">
+            <button class="btn-ins-take" on:click={() => { insSelect = {0: true}; confirmInsurance(); }}>
+              Take Insurance &nbsp; {fmt(Math.floor($hands[0].bet / 2), $runtimeCurrency)}
+            </button>
+            <button class="btn-ins-skip" on:click={() => takeInsurance(false)}>
+              Skip
+            </button>
+          </div>
+        {:else}
+          <!-- Multi-hand: per-hand toggles -->
           <div class="ins-modal-hands">
             {#each $hands as hand, idx}
               <button
@@ -432,10 +443,10 @@
           >
             {$hands.every((_, i) => insSelect[i]) ? 'Deselect All' : 'All Hands'}
           </button>
+          <button class="btn-ins-confirm" on:click={confirmInsurance}>
+            {$hands.some((_, i) => insSelect[i]) ? `Take Insurance  ${fmt($hands.reduce((s, h, i) => s + (insSelect[i] ? Math.floor(h.bet/2) : 0), 0), $runtimeCurrency)}` : 'Skip Insurance'}
+          </button>
         {/if}
-        <button class="btn-ins-confirm" on:click={confirmInsurance}>
-          {$hands.some((_, i) => insSelect[i]) ? `Take Insurance  ${fmt($hands.reduce((s, h, i) => s + (insSelect[i] ? Math.floor(h.bet/2) : 0), 0), $runtimeCurrency)}` : 'Skip Insurance'}
-        </button>
       </div>
     {/if}
 
@@ -1494,6 +1505,38 @@
     text-transform: uppercase;
     margin-top: 2px;
   }
+
+  /* Single-hand insurance two-button layout */
+  .ins-two-btns { display: flex; gap: 8px; margin-top: 2px; }
+  .btn-ins-take {
+    flex: 3;
+    padding: 15px 0;
+    border-radius: 10px;
+    border: none;
+    background: linear-gradient(135deg, #d4a840, #a88a30);
+    color: #071a0e;
+    font-size: 18px;
+    font-weight: 700;
+    font-family: 'Oswald', sans-serif;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .btn-ins-skip {
+    flex: 1;
+    padding: 15px 0;
+    border-radius: 10px;
+    border: 1.5px solid rgba(242,232,208,0.25);
+    background: transparent;
+    color: rgba(242,232,208,0.6);
+    font-size: 18px;
+    font-weight: 700;
+    font-family: 'Oswald', sans-serif;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .btn-ins-skip:hover { border-color: rgba(242,232,208,0.5); color: #f2e8d0; }
 
   /* RESULT */
   .result-msg { min-height: 24px; display: flex; align-items: center; justify-content: center; }
