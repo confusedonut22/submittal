@@ -509,15 +509,13 @@
       </div>
     {/if}
 
-    <!-- FIXED HEIGHT MIDDLE ZONE — locks player cards to same y always -->
+    <!-- FIXED HEIGHT MIDDLE ZONE — always 87px, locks player cards to y=422 -->
     <div class="mid-zone">
-      {#if !isBet}
-        <div class="divider-row">
-          <div class="divider-line"></div>
-          <span class="divider-label">Blackjack pays 7 to 5</span>
-          <div class="divider-line"></div>
-        </div>
-      {/if}
+      <div class="divider-row">
+        <div class="divider-line"></div>
+        <span class="divider-label">Blackjack pays 7 to 5</span>
+        <div class="divider-line"></div>
+      </div>
     </div>
 
     <!-- PLAYER HANDS -->
