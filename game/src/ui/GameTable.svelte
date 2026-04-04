@@ -463,7 +463,7 @@
         <img src={LOGO_IMAGE} alt="Chad Labs" class="dealer-logo" />
         <div class="dealer-cards-col">
           <div class="hand-value">{dealerDisplay}</div>
-          <div class="cards-row dealer-cards-row" class:dealer-cards-shrink={multi}>
+          <div class="cards-row dealer-cards-row">
             {#each $dealerHand as card, i}
               <div class="card-wrap" style="margin-left: {i > 0 ? dealerOverlap : '0'}; z-index: {i}">
                 {#if (isPlay || isIns) && i === 1}
@@ -1160,7 +1160,7 @@
   }
 
   /* DEALER */
-  .dealer-area { min-height: 0; position: relative; display: flex; flex-direction: row; align-items: flex-start; justify-content: center; gap: 16px; padding-top: 4px; }
+  .dealer-area { min-height: 0; max-height: 195px; position: relative; display: flex; flex-direction: row; align-items: flex-start; justify-content: center; gap: 16px; padding-top: 4px; }
   .dealer-cards-row.dealer-cards-shrink { transform: scale(0.85); transform-origin: center center; }
   .dealer-area-hidden { min-height: 0 !important; overflow: hidden; }
   .dealer-area-hidden .dealer-placeholder { height: 0; }
@@ -1974,6 +1974,7 @@
     .hand-value         { font-size: 20px; padding: 3px 14px; }
 
     .card        { width: 120px; height: 220px; border-radius: 10px; }
+    .dealer-cards-row .card { height: 160px !important; width: 112px !important; }
     .dealer-card  { width: 110px !important; height: 150px !important; }
     .card.small  { width: 90px; height: 126px; }
 
