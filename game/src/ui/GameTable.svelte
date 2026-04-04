@@ -1034,6 +1034,16 @@
     flex-direction: column;
     overflow: hidden;
   }
+  /* Desktop: scale to 90% so 100% zoom matches the 90% zoom appearance */
+  @media (min-width: 768px) {
+    .table-wrap {
+      transform: scale(0.9);
+      transform-origin: top center;
+      height: 111.12vh;
+      width: 111.12%;
+      margin-left: -5.56%;
+    }
+  }
 
   .balance-row {
     display: flex;
@@ -1586,7 +1596,6 @@
     flex-direction: column;
     align-items: center;
     gap: 2px;
-    margin-left: 44px; /* center under cards-row, offsetting sb-col width */
   }
   .wager-label {
     font-size: 20px; font-weight: 600; color: #f2e8d0;
@@ -1982,6 +1991,8 @@
     .ghost { width: 120px; height: 170px; font-size: 30px; }
     .ghost-spacer { width: 120px; }
     .cards-col { min-width: 120px; }
+    /* Center bet-bar under cards-row by offsetting sb-col width (80px + 8px gap) */
+    .bet-bar { padding-left: 88px; }
 
     .fact-row.table-layout {
       width: min(960px, 100%);
