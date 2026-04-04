@@ -732,10 +732,7 @@
       {#if showAbout}
         <div class="panel about-panel" on:click={stopEvent}>
           <div class="panel-title">About</div>
-          <div class="about-text">{isSocial
-            ? 'Sidebet Blackjack brings everything you want at the table into one place — side plays, multiple hands, and autoplay with three built-in strategy modes. Play up to four hands simultaneously, place Perfect Pairs and 21+3 side plays on each, and let autoplay run through rounds using Conservative, Optimal, or High Roller strategy. Built by Chad Labs.'
-            : 'Sidebet Blackjack brings everything you want at the table into one place — side bets, multiple hands, and autoplay with three built-in strategy modes. Play up to four hands simultaneously, place Perfect Pairs and 21+3 side bets on each, and let autoplay grind through rounds using Conservative, Optimal, or High Roller strategy. Built by Chad Labs.'
-          }</div>
+          <div class="about-text">We're degens, same as you. We love Stake Originals Blackjack. We just always wanted more at the table. Sidebets. Multiple hands. Autoplay across three strategies: Conservative, Optimal, and Aggressive. We kept waiting for someone to build it and nobody did, so Chad Labs did. It's not a competition, it's just more game. Drop a sidebet, open a second hand, and tell us you can stop at just one.</div>
         </div>
       {/if}
 
