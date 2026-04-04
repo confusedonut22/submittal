@@ -999,8 +999,8 @@ function finishRound(hs, dealerVal) {
   const h0 = hs[0];
   if (h0 && (h0.result === "lose" || h0.result === "bust")) {
     const pv = h0.cards.length ? handValue(h0.cards) : 0;
-    const bb = getBadBeat(pv, dealerVal, h0.result === "bust", h0.doubled && h0.result === "bust", $streak);
-    if (bb) { message.set(bb); phase.set(PHASE.RESULT); return; }
+    // bad beat messages disabled
+    // const bb = getBadBeat(...); if (bb) { ... }
   }
 
   const wins   = hs.filter(h => h.result === "win" || h.result === "blackjack").length;

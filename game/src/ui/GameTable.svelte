@@ -92,11 +92,11 @@
   $: netNegative = $netPosition < 0;
 
   // ─── RESPONSIVE INLINE STYLE VALUES ───
-  $: cardOverlap      = isDesktop ? (isWideDesktop ? '-52px' : '-57px') : '-18px';
-  $: cardOverlapSmall = isDesktop ? (isWideDesktop ? '-38px' : '-41px') : '-13px';
+  $: cardOverlap      = isDesktop ? (isWideDesktop ? '-46px' : '-51px') : '-18px';
+  $: cardOverlapSmall = isDesktop ? (isWideDesktop ? '-34px' : '-37px') : '-13px';
   $: dealerOverlap    = isDesktop ? (isWideDesktop ? '-23px' : '-29px') : '-18px';
   $: isFour = $numSlots === 4;
-  $: cardsRowMinH     = isDesktop ? (isFour ? 110 : (multi ? (isWideDesktop ? 138 : 164) : (isWideDesktop ? 185 : 218))) : (isFour ? 80 : (multi ? 113 : 146));
+  $: cardsRowMinH     = isDesktop ? (isFour ? 98 : (multi ? (isWideDesktop ? 123 : 146) : (isWideDesktop ? 165 : 195))) : (isFour ? 80 : (multi ? 113 : 146));
   $: handColMaxW      = isDesktop ? (multi ? (isWideDesktop ? '325px' : '390px') : (isWideDesktop ? '507px' : '598px')) : (multi ? '260px' : '416px');
   $: canDouble = (() => {
     if (!activeH || activeH.cards.length !== 2 || $balance < activeH.bet) return false;
@@ -892,8 +892,8 @@
         {/if}
       </div>
 
-      <!-- Fact display — always visible below action buttons during play -->
-      {#if (isPlay || $autoPlay) && $fact}
+      <!-- Fact bar — always visible when enabled -->
+      {#if $showFacts && $fact}
         <div class="fact-below-actions" on:click|stopPropagation>{$fact}</div>
       {/if}
 
@@ -1768,14 +1768,25 @@
     transition: background 0.15s;
   }
   .btn-stop-bar:hover { background: #e53935; }
-  /* Fact shown below action buttons */
+  /* Fact bar — pinned bottom strip, no border */
   .fact-below-actions {
-    font-size: 13px;
-    color: rgba(242,232,208,0.55);
+    width: 100%;
+    max-width: 912px;
+    margin: 0 auto;
+    height: 65px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Bebas Neue', 'Oswald', sans-serif;
+    font-size: 22px;
+    letter-spacing: 0.06em;
+    color: rgba(242,232,208,0.65);
     text-align: center;
-    padding: 4px 8px 0;
-    line-height: 1.4;
-    min-height: 20px;
+    padding: 0 16px;
+    line-height: 1.2;
+    background: none;
+    border: none;
+    box-shadow: none;
   }
   .btn-action {
     padding: 13px 0; border-radius: 7px; font-size: 16px; font-weight: 700;
@@ -1889,27 +1900,27 @@
     .balance-row { min-height: 44px; padding: 8px 24px 0; }
     .session-pill { font-size: 14px; }
 
-    .dealer-area        { min-height: 132px; }
-    .dealer-placeholder { height: 118px; }
+    .dealer-area        { min-height: 118px; }
+    .dealer-placeholder { height: 106px; }
     .hand-value         { font-size: 20px; padding: 3px 14px; }
 
-    .card        { width: 135px; height: 190px; border-radius: 12px; }
-    .card.small  { width: 101px; height: 142px; }
+    .card        { width: 120px; height: 170px; border-radius: 10px; }
+    .card.small  { width: 90px; height: 126px; }
 
     .card-tl     { top: 11px; left: 13px; }
     .card-br     { bottom: 11px; right: 13px; }
     .card.small .card-tl { top: 8px; left: 10px; }
     .card.small .card-br { bottom: 8px; right: 10px; }
 
-    .card-rank    { font-size: 26px; }
-    .card-suit-sm { font-size: 21px; }
-    .card-center  { font-size: 52px; }
-    .card.small .card-rank    { font-size: 20px; }
-    .card.small .card-suit-sm { font-size: 16px; }
-    .card.small .card-center  { font-size: 40px; }
+    .card-rank    { font-size: 23px; }
+    .card-suit-sm { font-size: 18px; }
+    .card-center  { font-size: 46px; }
+    .card.small .card-rank    { font-size: 17px; }
+    .card.small .card-suit-sm { font-size: 14px; }
+    .card.small .card-center  { font-size: 35px; }
 
-    .card-placeholder       { width: 135px; height: 190px; }
-    .card-placeholder.small { width: 101px; height: 142px; }
+    .card-placeholder       { width: 120px; height: 170px; }
+    .card-placeholder.small { width: 90px; height: 126px; }
 
     .hands-row      { min-height: 0; gap: 32px; }
     .hands-row.multi{ gap: 24px; }
@@ -1933,9 +1944,9 @@
     .sb-col       { gap: 6px; }
     .cards-area   { gap: 8px; }
 
-    .ghost { width: 135px; height: 190px; font-size: 34px; }
-    .ghost-spacer { width: 135px; }
-    .cards-col { min-width: 135px; }
+    .ghost { width: 120px; height: 170px; font-size: 30px; }
+    .ghost-spacer { width: 120px; }
+    .cards-col { min-width: 120px; }
 
     .fact-row.table-layout {
       width: min(960px, 100%);
