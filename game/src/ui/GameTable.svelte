@@ -1586,6 +1586,7 @@
     flex-direction: column;
     align-items: center;
     gap: 2px;
+    margin-left: 44px; /* center under cards-row, offsetting sb-col width */
   }
   .wager-label {
     font-size: 20px; font-weight: 600; color: #f2e8d0;
@@ -1741,7 +1742,7 @@
   /* Invisible spacer mirrors ghost width so card stacks stay at true screen center */
   .ghost-spacer { width: 104px; flex-shrink: 0; visibility: hidden; pointer-events: none; }
 
-  .ghost-wrap { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
+  .ghost-wrap { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 28px; }
   .ghost {
     width: 104px; height: 146px; border-radius: 8px;
     border: 2px dashed rgba(242,232,208,0.15);
