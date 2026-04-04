@@ -539,12 +539,10 @@
           <!-- Cards area -->
           <div class="cards-area">
             <div class="cards-col">
-              <!-- Hand value bubble -->
-              {#if hand.cards.length > 0}
-                <div class="hv-bubble" class:active={isActive} style="color: {hand.result ? rc : C.cr}">
-                  {handMsg(hand)}
-                </div>
-              {/if}
+              <!-- Hand value bubble — always rendered to lock card position -->
+              <div class="hv-bubble" class:active={isActive} style="color: {hand.result ? rc : C.cr}; visibility: {hand.cards.length > 0 ? 'visible' : 'hidden'}">
+                {hand.cards.length > 0 ? handMsg(hand) : '0'}
+              </div>
 
               <!-- sb-col sits beside cards-row in a shared flex row for vertical centering -->
               <div class="sb-and-cards">
