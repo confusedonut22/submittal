@@ -547,7 +547,10 @@
               {/if}
 
               <!-- sb-col sits beside cards-row in a shared flex row for vertical centering -->
-              <div class="sb-and-cards">
+              <div class="sb-and-cards" style="position:relative">
+                {#if (isBet || isResult) && !isReplay && $numSlots > 1}
+                  <button class="btn-remove-corner" on:click={() => removeSlot(idx)}>✕</button>
+                {/if}
                 {#if isBet || isResult || hand.sb.pp > 0 || hand.sb.t > 0}
                 <div class="sb-col">
                   {#each [{k:"pp", n:"Perfect Pairs"}, {k:"t", n:"21+3"}] as sb}
@@ -606,9 +609,6 @@
                 {/if}
               </div><!-- end cards-row -->
               </div><!-- end sb-and-cards -->
-              {#if (isBet || isResult) && !isReplay && $numSlots > 1}
-                <button class="btn-remove btn-remove-right" on:click={() => removeSlot(idx)}>✕</button>
-              {/if}
 
 
 
@@ -1744,7 +1744,7 @@
   /* Invisible spacer mirrors ghost width so card stacks stay at true screen center */
   .ghost-spacer { width: 104px; flex-shrink: 0; visibility: hidden; pointer-events: none; }
 
-  .ghost-wrap { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 32px; }
+  .ghost-wrap { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 26px; }
   .ghost {
     width: 104px; height: 175px; border-radius: 8px;
     border: 3px dashed rgba(242,232,208,0.55);
@@ -1757,6 +1757,27 @@
   .ghost:hover { opacity: 1; }
 
   .btn-remove { font-size: 13px; color: #bfb49a; background: none; border: 1px solid #2a5a3a; border-radius: 4px; padding: 2px 10px; margin-top: 4px; opacity: 0.5; }
+  .btn-remove-corner {
+    position: absolute;
+    top: 26px; /* aligns to top of card, below hv-bubble */
+    right: 0;
+    z-index: 20;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.65);
+    border: 1px solid rgba(242,232,208,0.3);
+    color: #f2e8d0;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0.7;
+    padding: 0;
+    line-height: 1;
+  }
+  .btn-remove-corner:hover { opacity: 1; background: rgba(200,0,0,0.7); }
   .btn-remove-right {
     margin-top: 0;
     margin-left: 6px;
