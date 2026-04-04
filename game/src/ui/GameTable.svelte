@@ -96,7 +96,7 @@
   $: cardOverlapSmall = isDesktop ? (isWideDesktop ? '-34px' : '-37px') : '-13px';
   $: dealerOverlap    = isDesktop ? (isWideDesktop ? '-23px' : '-29px') : '-18px';
   $: isFour = $numSlots === 4;
-  $: cardsRowMinH     = isDesktop ? (isFour ? 83 : (multi ? (isWideDesktop ? 104 : 124) : (isWideDesktop ? 140 : 165))) : (isFour ? 80 : (multi ? 113 : 146));
+  $: cardsRowMinH     = isDesktop ? (isFour ? 110 : (multi ? (isWideDesktop ? 138 : 164) : (isWideDesktop ? 185 : 220))) : (isFour ? 80 : (multi ? 113 : 146));
   $: handColMaxW      = isDesktop ? (multi ? (isWideDesktop ? '325px' : '390px') : (isWideDesktop ? '507px' : '598px')) : (multi ? '260px' : '416px');
   $: canDouble = (() => {
     if (!activeH || activeH.cards.length !== 2 || $balance < activeH.bet) return false;
@@ -1944,7 +1944,7 @@
     .dealer-placeholder { height: 80px; }
     .hand-value         { font-size: 20px; padding: 3px 14px; }
 
-    .card        { width: 120px; height: 165px; border-radius: 10px; }
+    .card        { width: 120px; height: 220px; border-radius: 10px; }
     .card.small  { width: 90px; height: 126px; }
 
     .card-tl     { top: 11px; left: 13px; }
@@ -1959,7 +1959,7 @@
     .card.small .card-suit-sm { font-size: 14px; }
     .card.small .card-center  { font-size: 35px; }
 
-    .card-placeholder       { width: 120px; height: 165px; }
+    .card-placeholder       { width: 120px; height: 220px; }
     .card-placeholder.small { width: 90px; height: 126px; }
 
     .hands-row      { min-height: 0; gap: 32px; }
