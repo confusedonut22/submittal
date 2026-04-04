@@ -96,7 +96,7 @@
   $: cardOverlapSmall = isDesktop ? (isWideDesktop ? '-34px' : '-37px') : '-13px';
   $: dealerOverlap    = isDesktop ? (isWideDesktop ? '-23px' : '-29px') : '-18px';
   $: isFour = $numSlots === 4;
-  $: cardsRowMinH     = isDesktop ? 220 : 146;
+  $: cardsRowMinH     = isDesktop ? (isFour ? 98 : (multi ? (isWideDesktop ? 123 : 146) : (isWideDesktop ? 165 : 195))) : (isFour ? 80 : (multi ? 113 : 146));
   $: handColMaxW      = isDesktop ? (multi ? (isWideDesktop ? '325px' : '390px') : (isWideDesktop ? '507px' : '598px')) : (multi ? '260px' : '416px');
   $: canDouble = (() => {
     if (!activeH || activeH.cards.length !== 2 || $balance < activeH.bet) return false;
@@ -452,7 +452,11 @@
 
     {#if !isReplay && isBet}
       <div class="felt-menu" on:click={stopEvent}>
-
+        <div class="felt-toggle-copy">{isSocial ? 'Play amount' : 'Wager input'}</div>
+        <div class="bet-entry-toggle felt-toggle-stack" on:click={stopEvent}>
+          <button class="bet-entry-btn" class:active={betEntryMode === 'amount'} on:click={() => betEntryMode = 'amount'}>Amount</button>
+          <button class="bet-entry-btn" class:active={betEntryMode === 'chips'} on:click={() => betEntryMode = 'chips'}>Chips</button>
+        </div>
       </div>
     {/if}
 
@@ -505,23 +509,16 @@
       </div>
     {/if}
 
-    <!-- DIVIDER — active play only -->
-    {#if !isBet}
-      <div class="divider-row">
-        <div class="divider-line"></div>
-        <span class="divider-label">Blackjack pays 7 to 5</span>
-        <div class="divider-line"></div>
-      </div>
-    {/if}
-
-    {#if !isDealer}
-      <div class="fact-row"></div>
-    {/if}
-
-    <!-- INSURANCE PROMPT (per-hand, handled inline per card + bottom dock) -->
-
-    <!-- Result message moved inline with dealer cards -->
-
+    <!-- FIXED HEIGHT MIDDLE ZONE — locks player cards to same y always -->
+    <div class="mid-zone">
+      {#if !isBet}
+        <div class="divider-row">
+          <div class="divider-line"></div>
+          <span class="divider-label">Blackjack pays 7 to 5</span>
+          <div class="divider-line"></div>
+        </div>
+      {/if}
+    </div>
 
     <!-- PLAYER HANDS -->
     <div class="hands-row" class:multi class:four={$numSlots === 4}>
@@ -539,10 +536,12 @@
           <!-- Cards area -->
           <div class="cards-area">
             <div class="cards-col">
-              <!-- Hand value bubble — always rendered to lock card position -->
-              <div class="hv-bubble" class:active={isActive} style="color: {hand.result ? rc : C.cr}; visibility: {hand.cards.length > 0 ? 'visible' : 'hidden'}">
-                {hand.cards.length > 0 ? handMsg(hand) : '0'}
-              </div>
+              <!-- Hand value bubble -->
+              {#if hand.cards.length > 0}
+                <div class="hv-bubble" class:active={isActive} style="color: {hand.result ? rc : C.cr}">
+                  {handMsg(hand)}
+                </div>
+              {/if}
 
               <!-- sb-col sits beside cards-row in a shared flex row for vertical centering -->
               <div class="sb-and-cards">
@@ -604,9 +603,6 @@
                 {/if}
               </div><!-- end cards-row -->
               </div><!-- end sb-and-cards -->
-              {#if (isBet || isResult) && !isReplay && $numSlots > 1}
-                <button class="btn-remove btn-remove-right" on:click={() => removeSlot(idx)}>✕</button>
-              {/if}
 
 
 
@@ -638,8 +634,8 @@
                 </div>
               {/if}
 
-              <!-- Chip buttons removed -->
-              {#if false && isBet && !isReplay && (betEntryMode === 'chips' || betEntryMode === 'both')}
+              <!-- Chip buttons -->
+              {#if isBet && !isReplay && (betEntryMode === 'chips' || betEntryMode === 'both')}
                 <div class="chip-btns">
                   {#if !activeSb && $runtimeConfig?.betLevels?.length}
                     {#each $runtimeConfig.betLevels as betLevel}
@@ -671,6 +667,9 @@
                 {/if}
               {/if}
 
+              {#if (isBet || isResult) && !isReplay && $numSlots > 1}
+                <button class="btn-remove" on:click={() => removeSlot(idx)}>Remove</button>
+              {/if}
             </div><!-- end cards-col -->
           </div><!-- end cards-area -->
         </div>
@@ -866,14 +865,7 @@
       {/if}
 
 
-      <!-- Stop bar: always in DOM, rigid, visible only during autoplay -->
-      <button
-        class="btn-stop-bar"
-        class:btn-stop-bar-hidden={!$autoPlay || isReplay || autoplayDisabled}
-        on:click={() => autoPlay.set(false)}
-      >■ Stop Auto</button>
-
-      <!-- Play / Action buttons -->
+      <!-- Play / Action buttons — fixed height container prevents layout jump -->
       <div class="action-area-fixed">
         {#if isPlay && !$autoPlay && activeH && !isReplay}
           <div class="action-grid">
@@ -882,7 +874,11 @@
             <button class="btn-action" class:dim={!canSplit} disabled={!canSplit} on:click={canSplit ? split : undefined}>Split</button>
             <button class="btn-action" class:dim={!canDouble} disabled={!canDouble} on:click={canDouble ? doubleDown : undefined}>x2</button>
           </div>
+        {:else if $autoPlay && !isReplay && !autoplayDisabled}
+          <!-- Full-width red stop bar during autoplay -->
+          <button class="btn-stop-bar" on:click={() => autoPlay.set(false)}>■ Stop Auto</button>
         {:else}
+          <!-- Spacer to hold layout -->
           <div class="action-area-spacer"></div>
         {/if}
       </div>
@@ -1244,8 +1240,6 @@
     text-align: center;
     font-family: 'Oswald', sans-serif;
     letter-spacing: 0.02em;
-    min-height: 29px;
-    box-sizing: border-box;
   }
   .hv-bubble.active {
     background: rgba(212,168,64,0.15);
@@ -1321,6 +1315,18 @@
   }
   .dealer-result-text.win  { color: #66ff88; }
   .dealer-result-text.lose { color: #ef5350; }
+
+  /* FIXED HEIGHT MID ZONE — keeps player cards locked */
+  .mid-zone {
+    height: 52px !important;
+    min-height: 52px !important;
+    max-height: 52px !important;
+    flex-shrink: 0 !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
+  }
 
   /* DIVIDER — play screen */
   .divider-row {
@@ -1574,7 +1580,7 @@
   .msg-text.bad-beat { font-size: 30px; color: #ef5350; }
 
   /* HANDS ROW */
-  .hands-row { display: flex; justify-content: center; gap: 16px; padding-top: 0; min-height: 0; flex: 0 0 auto; align-items: flex-start; flex-wrap: nowrap; }
+  .hands-row { display: flex; justify-content: center; gap: 16px; padding-top: 0; min-height: 0; flex: 0 0 auto; align-items: center; flex-wrap: nowrap; }
   .hands-row.multi { gap: 20px; }
   .hand-col  { display: flex; flex-direction: column; align-items: flex-start; flex: 0 0 auto; min-width: 0; justify-content: flex-start; }
 
@@ -1741,28 +1747,19 @@
   /* Invisible spacer mirrors ghost width so card stacks stay at true screen center */
   .ghost-spacer { width: 104px; flex-shrink: 0; visibility: hidden; pointer-events: none; }
 
-  .ghost-wrap { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 32px; }
+  .ghost-wrap { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 28px; }
   .ghost {
-    width: 104px; height: 200px; border-radius: 8px;
-    border: 3px dashed rgba(242,232,208,0.55);
-    background: rgba(242,232,208,0.04);
+    width: 104px; height: 146px; border-radius: 8px;
+    border: 2px dashed rgba(242,232,208,0.15);
+    background: rgba(242,232,208,0.03);
     cursor: pointer;
     display: flex; align-items: center; justify-content: center;
-    font-size: 28px; color: #f2e8d0; opacity: 0.7;
+    font-size: 28px; color: #f2e8d0; opacity: 0.2;
     transition: all 0.2s;
   }
-  .ghost:hover { opacity: 1; }
+  .ghost:hover { opacity: 0.4; }
 
   .btn-remove { font-size: 13px; color: #bfb49a; background: none; border: 1px solid #2a5a3a; border-radius: 4px; padding: 2px 10px; margin-top: 4px; opacity: 0.5; }
-  .btn-remove-right {
-    margin-top: 0;
-    margin-left: 6px;
-    align-self: center;
-    padding: 4px 8px;
-    font-size: 14px;
-    opacity: 0.4;
-    flex-shrink: 0;
-  }
 
   /* BOTTOM DOCK */
   .bottom-dock {
@@ -1810,7 +1807,6 @@
     transition: background 0.15s;
   }
   .btn-stop-bar:hover { background: #e53935; }
-  .btn-stop-bar-hidden { visibility: hidden; pointer-events: none; }
   /* Fact bar — pinned bottom strip, no border */
   .fact-below-actions {
     width: 100%;
@@ -1943,12 +1939,12 @@
     .balance-row { min-height: 44px; padding: 8px 24px 0; }
     .session-pill { font-size: 14px; }
 
-    .dealer-area        { min-height: 90px; gap: 24px; }
+    .dealer-area        { min-height: 118px; gap: 24px; }
     .dealer-logo        { width: 120px; height: 120px; left: 0; }
-    .dealer-placeholder { height: 80px; }
+    .dealer-placeholder { height: 106px; }
     .hand-value         { font-size: 20px; padding: 3px 14px; }
 
-    .card        { width: 120px; height: 220px; border-radius: 10px; }
+    .card        { width: 120px; height: 195px; border-radius: 10px; }
     .card.small  { width: 90px; height: 126px; }
 
     .card-tl     { top: 11px; left: 13px; }
@@ -1963,7 +1959,7 @@
     .card.small .card-suit-sm { font-size: 14px; }
     .card.small .card-center  { font-size: 35px; }
 
-    .card-placeholder       { width: 120px; height: 220px; }
+    .card-placeholder       { width: 120px; height: 195px; }
     .card-placeholder.small { width: 90px; height: 126px; }
 
     .hands-row      { min-height: 0; gap: 32px; }
