@@ -1738,7 +1738,7 @@
   /* Invisible spacer mirrors ghost width so card stacks stay at true screen center */
   .ghost-spacer { width: 104px; flex-shrink: 0; visibility: hidden; pointer-events: none; }
 
-  .ghost-wrap { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 30px; }
+  .ghost-wrap { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 32px; }
   .ghost {
     width: 104px; height: 146px; border-radius: 8px;
     border: 2px dashed rgba(242,232,208,0.15);
