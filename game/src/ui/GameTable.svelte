@@ -96,7 +96,7 @@
   $: cardOverlapSmall = isDesktop ? (isWideDesktop ? '-34px' : '-37px') : '-13px';
   $: dealerOverlap    = isDesktop ? (isWideDesktop ? '-23px' : '-29px') : '-18px';
   $: isFour = $numSlots === 4;
-  $: cardsRowMinH     = isDesktop ? (isFour ? 98 : (multi ? (isWideDesktop ? 123 : 146) : (isWideDesktop ? 165 : 195))) : (isFour ? 80 : (multi ? 113 : 146));
+  $: cardsRowMinH     = isDesktop ? (isFour ? 83 : (multi ? (isWideDesktop ? 104 : 124) : (isWideDesktop ? 140 : 165))) : (isFour ? 80 : (multi ? 113 : 146));
   $: handColMaxW      = isDesktop ? (multi ? (isWideDesktop ? '325px' : '390px') : (isWideDesktop ? '507px' : '598px')) : (multi ? '260px' : '416px');
   $: canDouble = (() => {
     if (!activeH || activeH.cards.length !== 2 || $balance < activeH.bet) return false;
@@ -143,7 +143,7 @@
   }
 
   function handMsg(h) {
-    if (h.result) return h.message;
+    // Always show hand value, never per-hand result label
     const v = handValue(h.cards);
     if (isSoft(h.cards) && v <= 21) return `${v - 10}/${v}`;
     return v;
@@ -452,26 +452,25 @@
 
     {#if !isReplay && isBet}
       <div class="felt-menu" on:click={stopEvent}>
-        <div class="felt-toggle-copy">{isSocial ? 'Play amount' : 'Wager input'}</div>
-        <div class="bet-entry-toggle felt-toggle-stack" on:click={stopEvent}>
-          <button class="bet-entry-btn" class:active={betEntryMode === 'amount'} on:click={() => betEntryMode = 'amount'}>Amount</button>
-          <button class="bet-entry-btn" class:active={betEntryMode === 'chips'} on:click={() => betEntryMode = 'chips'}>Chips</button>
-        </div>
+
       </div>
     {/if}
 
     <!-- DEALER AREA -->
     <div class="dealer-area" class:dealer-area-hidden={isBet}>
       {#if $dealerHand.length > 0}
-        <div class="hand-value">{dealerDisplay}</div>
-        <div class="cards-row">
-          {#each $dealerHand as card, i}
-            <div class="card-wrap" style="margin-left: {i > 0 ? dealerOverlap : '0'}; z-index: {i}">
-              {#if (isPlay || isIns) && i === 1}
-                <div class="card card-hidden">
-                  <img src={LOGO_IMAGE} alt="" class="card-back-logo" />
-                </div>
-              {:else}
+        <!-- Logo moves left of dealer cards once dealt -->
+        <img src={LOGO_IMAGE} alt="Chad Labs" class="dealer-logo" />
+        <div class="dealer-cards-col">
+          <div class="hand-value">{dealerDisplay}</div>
+          <div class="cards-row">
+            {#each $dealerHand as card, i}
+              <div class="card-wrap" style="margin-left: {i > 0 ? dealerOverlap : '0'}; z-index: {i}">
+                {#if (isPlay || isIns) && i === 1}
+                  <div class="card card-hidden">
+                    <img src={LOGO_IMAGE} alt="" class="card-back-logo" />
+                  </div>
+                {:else}
                   <div class="card card-face" class:red={card.suit === 'diamonds' || card.suit === 'hearts'}>
                     <div class="card-corner card-tl">
                       <span class="card-rank">{card.rank}</span>
@@ -483,16 +482,23 @@
                       <span class="card-suit-sm">{card.suit === 'diamonds' ? '♦' : card.suit === 'hearts' ? '♥' : card.suit === 'clubs' ? '♣' : '♠'}</span>
                     </div>
                   </div>
-              {/if}
+                {/if}
+              </div>
+            {/each}
+          </div>
+          <!-- Result message to the right of dealer cards -->
+          {#if $message && isResult}
+            <div class="dealer-result-msg">
+              <span class="dealer-result-text" class:win={$message === 'You Win!' || $message === 'Push'} class:lose={$message === 'Dealer Wins'}>{$message}</span>
             </div>
-          {/each}
+          {/if}
         </div>
       {:else}
         <div class="dealer-placeholder"></div>
       {/if}
     </div>
 
-    <!-- CHAD LABS LOGO — bet screen only -->
+    <!-- CHAD LABS LOGO — bet screen only (centered) -->
     {#if isBet}
       <div class="felt-logo-row">
         <img src={LOGO_IMAGE} alt="Chad Labs" class="felt-logo felt-logo-large" />
@@ -514,12 +520,7 @@
 
     <!-- INSURANCE PROMPT (per-hand, handled inline per card + bottom dock) -->
 
-    <!-- RESULT MESSAGE -->
-    <div class="result-msg">
-      {#if $message && isResult}
-        <span class="msg-text" class:bad-beat={isBadBeat}>{$message}</span>
-      {/if}
-    </div>
+    <!-- Result message moved inline with dealer cards -->
 
 
     <!-- PLAYER HANDS -->
@@ -605,19 +606,16 @@
                 {/if}
               </div><!-- end cards-row -->
               </div><!-- end sb-and-cards -->
-
-              <!-- Payout -->
-              {#if hand.payout > 0 && isResult}
-                <div class="payout">+{fmt(hand.payout, $runtimeCurrency)}</div>
+              {#if (isBet || isResult) && !isReplay && $numSlots > 1}
+                <button class="btn-remove btn-remove-right" on:click={() => removeSlot(idx)}>✕</button>
               {/if}
 
 
-              <!-- Wager label -->
+
+
+              <!-- Wager controls: 1/2·Bet·2x first, then dollar amount below -->
               {#if hand.bet > 0 || isBet || isResult}
                 <div class="bet-bar">
-                  <div class="wager-label wager-label-top">
-                    {fmt(hand.bet, $runtimeCurrency)}{activeSb ? ` · ${activeSb === 'pp' ? 'PP' : '21+3'} ${fmt(hand.sb[activeSb], $runtimeCurrency)}` : ''}
-                  </div>
                   {#if (isBet || isResult) && !isReplay && !activeSb}
                     <div class="bet-amount-row bet-amount-row-with-actions">
                       <button class="bet-quick-btn" on:click={() => adjustBetByFactor(idx, 0.5)}>1/2</button>
@@ -635,13 +633,15 @@
                       </div>
                       <button class="bet-quick-btn" on:click={() => adjustBetByFactor(idx, 2)}>2x</button>
                     </div>
-
                   {/if}
+                  <div class="wager-label wager-label-top">
+                    {fmt(hand.bet, $runtimeCurrency)}{activeSb ? ` · ${activeSb === 'pp' ? 'PP' : '21+3'} ${fmt(hand.sb[activeSb], $runtimeCurrency)}` : ''}
+                  </div>
                 </div>
               {/if}
 
-              <!-- Chip buttons -->
-              {#if isBet && !isReplay && (betEntryMode === 'chips' || betEntryMode === 'both')}
+              <!-- Chip buttons removed -->
+              {#if false && isBet && !isReplay && (betEntryMode === 'chips' || betEntryMode === 'both')}
                 <div class="chip-btns">
                   {#if !activeSb && $runtimeConfig?.betLevels?.length}
                     {#each $runtimeConfig.betLevels as betLevel}
@@ -673,9 +673,6 @@
                 {/if}
               {/if}
 
-              {#if (isBet || isResult) && !isReplay && $numSlots > 1}
-                <button class="btn-remove" on:click={() => removeSlot(idx)}>Remove</button>
-              {/if}
             </div><!-- end cards-col -->
           </div><!-- end cards-area -->
         </div>
@@ -731,10 +728,7 @@
       {#if showAbout}
         <div class="panel about-panel" on:click={stopEvent}>
           <div class="panel-title">About</div>
-          <div class="about-text">{isSocial
-            ? 'Sidebet Blackjack brings everything you want at the table into one place — side plays, multiple hands, and autoplay with three built-in strategy modes. Play up to four hands simultaneously, place Perfect Pairs and 21+3 side plays on each, and let autoplay run through rounds using Conservative, Optimal, or High Roller strategy. Built by Chad Labs.'
-            : 'Sidebet Blackjack brings everything you want at the table into one place — side bets, multiple hands, and autoplay with three built-in strategy modes. Play up to four hands simultaneously, place Perfect Pairs and 21+3 side bets on each, and let autoplay grind through rounds using Conservative, Optimal, or High Roller strategy. Built by Chad Labs.'
-          }</div>
+          <div class="about-text">We're degens, same as you. We love Stake Originals Blackjack. We just always wanted more at the table. Sidebets. Multiple hands. Autoplay across three strategies: Conservative, Optimal, and Aggressive. We kept waiting for someone to build it and nobody did, so Chad Labs did. It's not a competition, it's just more game. Drop a sidebet, open a second hand, and tell us you can stop at just one.</div>
         </div>
       {/if}
 
@@ -892,11 +886,6 @@
         {/if}
       </div>
 
-      <!-- Fact bar — always visible when enabled -->
-      {#if $showFacts && $fact}
-        <div class="fact-below-actions" on:click|stopPropagation>{$fact}</div>
-      {/if}
-
       <!-- Deal button -->
       {#if (isBet || isResult) && !isReplay}
         <div class="center-deal-wrap">
@@ -909,6 +898,11 @@
             {dealLabel}
           </button>
         </div>
+      {/if}
+
+      <!-- Fact bar — below deal button, only visible after cards dealt -->
+      {#if $showFacts && $fact && !isBet}
+        <div class="fact-below-actions" on:click|stopPropagation>{$fact}</div>
       {/if}
     </div>
   </div>
@@ -1121,7 +1115,7 @@
     display: flex;
     flex-direction: column;
     padding: 4px 14px 0;
-    padding-bottom: 200px;
+    padding-bottom: 180px;
     background: radial-gradient(ellipse at 50% 35%, #153d24, #0c2616 55%, #071a0e 100%);
     transform-origin: top center;
     overflow-y: auto;
@@ -1165,7 +1159,7 @@
   }
 
   /* DEALER */
-  .dealer-area { min-height: 112px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .dealer-area { min-height: 112px; position: relative; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 16px; }
   .dealer-area-hidden { min-height: 0 !important; overflow: hidden; }
   .dealer-area-hidden .dealer-placeholder { height: 0; }
   .dealer-placeholder { height: 96px; }
@@ -1177,7 +1171,7 @@
   .card {
     border-radius: 8px;
     width: 104px;
-    height: 175px;
+    height: 200px;
     position: relative;
     overflow: hidden;
     animation: cardIn 0.22s ease both;
@@ -1230,7 +1224,7 @@
   .card-face:not(.red) .card-center { color: #1b1b1b; }
 
   .card-placeholder {
-    width: 104px; height: 175px;
+    width: 104px; height: 200px;
     border-radius: 8px;
     border: 1.5px dashed rgba(242,232,208,0.12);
     background: rgba(242,232,208,0.03);
@@ -1291,6 +1285,39 @@
     opacity: 0.95;
     filter: drop-shadow(0 0 24px rgba(212,168,64,0.55));
   }
+
+  /* DEALER LOGO — fixed to left side */
+  .dealer-logo {
+    position: absolute;
+    left: 0;
+    width: 110px;
+    height: 110px;
+    object-fit: contain;
+    opacity: 0.9;
+    filter: drop-shadow(0 0 16px rgba(212,168,64,0.5));
+  }
+  .dealer-cards-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* INLINE DEALER RESULT MESSAGE */
+  .dealer-result-msg {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 12px;
+  }
+  .dealer-result-text {
+    font-family: 'Oswald', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    animation: fadeIn 0.3s ease;
+  }
+  .dealer-result-text.win  { color: #66ff88; }
+  .dealer-result-text.lose { color: #ef5350; }
 
   /* DIVIDER — play screen */
   .divider-row {
@@ -1544,7 +1571,7 @@
   .msg-text.bad-beat { font-size: 30px; color: #ef5350; }
 
   /* HANDS ROW */
-  .hands-row { display: flex; justify-content: center; gap: 16px; padding-top: 0; min-height: 0; flex: 0 0 auto; align-items: flex-start; flex-wrap: nowrap; }
+  .hands-row { display: flex; justify-content: center; gap: 16px; padding-top: 0; min-height: 0; flex: 0 0 auto; align-items: center; flex-wrap: nowrap; }
   .hands-row.multi { gap: 20px; }
   .hand-col  { display: flex; flex-direction: column; align-items: flex-start; flex: 0 0 auto; min-width: 0; justify-content: flex-start; }
 
@@ -1555,6 +1582,7 @@
     flex-direction: column;
     align-items: center;
     gap: 2px;
+    margin-left: 44px; /* center under cards-row, offsetting sb-col width */
   }
   .wager-label {
     font-size: 20px; font-weight: 600; color: #f2e8d0;
@@ -1710,7 +1738,7 @@
   /* Invisible spacer mirrors ghost width so card stacks stay at true screen center */
   .ghost-spacer { width: 104px; flex-shrink: 0; visibility: hidden; pointer-events: none; }
 
-  .ghost-wrap { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
+  .ghost-wrap { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 28px; }
   .ghost {
     width: 104px; height: 146px; border-radius: 8px;
     border: 2px dashed rgba(242,232,208,0.15);
@@ -1723,6 +1751,15 @@
   .ghost:hover { opacity: 0.4; }
 
   .btn-remove { font-size: 13px; color: #bfb49a; background: none; border: 1px solid #2a5a3a; border-radius: 4px; padding: 2px 10px; margin-top: 4px; opacity: 0.5; }
+  .btn-remove-right {
+    margin-top: 0;
+    margin-left: 6px;
+    align-self: center;
+    padding: 4px 8px;
+    font-size: 14px;
+    opacity: 0.4;
+    flex-shrink: 0;
+  }
 
   /* BOTTOM DOCK */
   .bottom-dock {
@@ -1775,7 +1812,7 @@
     width: 100%;
     max-width: 912px;
     margin: 0 auto;
-    height: 65px;
+    height: 50px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1902,11 +1939,12 @@
     .balance-row { min-height: 44px; padding: 8px 24px 0; }
     .session-pill { font-size: 14px; }
 
-    .dealer-area        { min-height: 118px; }
-    .dealer-placeholder { height: 106px; }
+    .dealer-area        { min-height: 90px; gap: 24px; }
+    .dealer-logo        { width: 120px; height: 120px; left: 0; }
+    .dealer-placeholder { height: 80px; }
     .hand-value         { font-size: 20px; padding: 3px 14px; }
 
-    .card        { width: 120px; height: 170px; border-radius: 10px; }
+    .card        { width: 120px; height: 165px; border-radius: 10px; }
     .card.small  { width: 90px; height: 126px; }
 
     .card-tl     { top: 11px; left: 13px; }
@@ -1921,7 +1959,7 @@
     .card.small .card-suit-sm { font-size: 14px; }
     .card.small .card-center  { font-size: 35px; }
 
-    .card-placeholder       { width: 120px; height: 170px; }
+    .card-placeholder       { width: 120px; height: 165px; }
     .card-placeholder.small { width: 90px; height: 126px; }
 
     .hands-row      { min-height: 0; gap: 32px; }
