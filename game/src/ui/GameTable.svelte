@@ -872,17 +872,21 @@
       {/if}
 
 
-      <!-- Play / Action buttons -->
-      {#if isPlay && !$autoPlay && activeH && !isReplay}
-        <div class="action-grid">
-          <button class="btn-action" on:click={hit}>Hit</button>
-          <button class="btn-action" on:click={stand}>Stand</button>
-          <button class="btn-action" class:dim={!canSplit} disabled={!canSplit} on:click={canSplit ? split : undefined}>Split</button>
-          <button class="btn-action" class:dim={!canDouble} disabled={!canDouble} on:click={canDouble ? doubleDown : undefined}>x2</button>
-        </div>
-      {:else if $autoPlay && !isReplay && !autoplayDisabled}
+      <!-- Fact bar — above action grid when enabled -->
+      {#if $showFacts && $fact && !isBet}
+        <div class="fact-below-actions" on:click|stopPropagation>{$fact}</div>
+      {/if}
+
+      <!-- Action grid: always present, active only during play -->
+      {#if $autoPlay && !isReplay && !autoplayDisabled}
         <button class="btn-stop-bar" on:click={() => autoPlay.set(false)}>■ Stop Auto</button>
       {/if}
+      <div class="action-grid" class:action-grid-hidden={!isPlay || $autoPlay || !activeH || isReplay}>
+        <button class="btn-action" class:dim={!isPlay || $autoPlay} disabled={!isPlay || $autoPlay || !activeH} on:click={hit}>Hit</button>
+        <button class="btn-action" class:dim={!isPlay || $autoPlay} disabled={!isPlay || $autoPlay || !activeH} on:click={stand}>Stand</button>
+        <button class="btn-action" class:dim={!canSplit || !isPlay || $autoPlay} disabled={!canSplit || !isPlay || $autoPlay} on:click={canSplit && isPlay ? split : undefined}>Split</button>
+        <button class="btn-action" class:dim={!canDouble || !isPlay || $autoPlay} disabled={!canDouble || !isPlay || $autoPlay} on:click={canDouble && isPlay ? doubleDown : undefined}>x2</button>
+      </div>
 
       <!-- Deal button -->
       {#if (isBet || isResult) && !isReplay}
@@ -898,10 +902,7 @@
         </div>
       {/if}
 
-      <!-- Fact bar — below deal button, only visible after cards dealt -->
-      {#if $showFacts && $fact && !isBet}
-        <div class="fact-below-actions" on:click|stopPropagation>{$fact}</div>
-      {/if}
+
     </div>
   </div>
 </div>
@@ -1300,8 +1301,8 @@
   .dealer-logo {
     position: absolute;
     left: 0;
-    width: 110px;
-    height: 110px;
+    width: 140px;
+    height: 140px;
     object-fit: contain;
     opacity: 0.9;
     filter: drop-shadow(0 0 16px rgba(212,168,64,0.5));
@@ -1790,6 +1791,7 @@
   .action-area-fixed { display: flex; flex-direction: column; justify-content: flex-end; }
   .action-area-spacer { flex: 1; }
   .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 5px; }
+  .action-grid-hidden { opacity: 0; pointer-events: none; }
   /* Full-width red stop bar replaces action buttons during autoplay */
   .btn-stop-bar {
     width: 100%;
@@ -1940,7 +1942,7 @@
     .session-pill { font-size: 14px; }
 
     .dealer-area        { min-height: 118px; gap: 24px; }
-    .dealer-logo        { width: 120px; height: 120px; left: 0; }
+    .dealer-logo        { width: 160px; height: 160px; left: 0; }
     .dealer-placeholder { height: 106px; }
     .hand-value         { font-size: 20px; padding: 3px 14px; }
 
