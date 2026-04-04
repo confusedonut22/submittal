@@ -96,7 +96,7 @@
   $: cardOverlapSmall = isDesktop ? (isWideDesktop ? '-34px' : '-37px') : '-13px';
   $: dealerOverlap    = isDesktop ? (isWideDesktop ? '-23px' : '-29px') : '-18px';
   $: isFour = $numSlots === 4;
-  $: cardsRowMinH     = isDesktop ? 220 : 146;
+  $: cardsRowMinH     = isDesktop ? (isFour ? 110 : (multi ? (isWideDesktop ? 138 : 164) : (isWideDesktop ? 185 : 220))) : (isFour ? 80 : (multi ? 113 : 146));
   $: handColMaxW      = isDesktop ? (multi ? (isWideDesktop ? '325px' : '390px') : (isWideDesktop ? '507px' : '598px')) : (multi ? '260px' : '416px');
   $: canDouble = (() => {
     if (!activeH || activeH.cards.length !== 2 || $balance < activeH.bet) return false;
@@ -524,7 +524,7 @@
 
 
     <!-- PLAYER HANDS -->
-    <div class="hands-row" class:multi class:four={$numSlots === 4} class:hands-row-bet={isBet}>
+    <div class="hands-row" class:multi class:four={$numSlots === 4}>
       <!-- Invisible left spacer mirrors ghost width — keeps card stack at screen center -->
       {#if (isBet || isResult) && !isReplay && $numSlots < $maxHands}
         <div class="ghost-spacer"></div>
@@ -1575,7 +1575,6 @@
 
   /* HANDS ROW */
   .hands-row { display: flex; justify-content: center; gap: 16px; padding-top: 0; min-height: 0; flex: 0 0 auto; align-items: flex-start; flex-wrap: nowrap; }
-  .hands-row-bet { padding-top: 57px; }
   .hands-row.multi { gap: 20px; }
   .hand-col  { display: flex; flex-direction: column; align-items: flex-start; flex: 0 0 auto; min-width: 0; justify-content: flex-start; }
 
@@ -1742,7 +1741,7 @@
   /* Invisible spacer mirrors ghost width so card stacks stay at true screen center */
   .ghost-spacer { width: 104px; flex-shrink: 0; visibility: hidden; pointer-events: none; }
 
-  .ghost-wrap { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 28px; }
+  .ghost-wrap { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 32px; }
   .ghost {
     width: 104px; height: 146px; border-radius: 8px;
     border: 3px dashed rgba(242,232,208,0.55);
@@ -1950,7 +1949,6 @@
     .hand-value         { font-size: 20px; padding: 3px 14px; }
 
     .card        { width: 120px; height: 220px; border-radius: 10px; }
-    .dealer-cards-row .card { width: 110px !important; height: 160px !important; }
     .card.small  { width: 90px; height: 126px; }
 
     .card-tl     { top: 11px; left: 13px; }
@@ -1990,7 +1988,7 @@
     .sb-col       { gap: 6px; }
     .cards-area   { gap: 8px; }
 
-    .ghost { width: 120px; height: 220px; font-size: 30px; }
+    .ghost { width: 120px; height: 170px; font-size: 30px; }
     .ghost-spacer { width: 120px; }
     .cards-col { min-width: 120px; }
 
