@@ -1115,7 +1115,7 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    padding: 4px 14px 0;
+    padding: 0 14px 0;
     padding-bottom: 180px;
     background: radial-gradient(ellipse at 50% 35%, #153d24, #0c2616 55%, #071a0e 100%);
     transform-origin: top center;
@@ -1160,7 +1160,7 @@
   }
 
   /* DEALER */
-  .dealer-area { min-height: 112px; position: relative; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 16px; }
+  .dealer-area { min-height: 0; position: relative; display: flex; flex-direction: row; align-items: flex-start; justify-content: center; gap: 16px; padding-top: 4px; }
   .dealer-cards-row.dealer-cards-shrink { transform: scale(0.72); transform-origin: center center; }
   .dealer-area-hidden { min-height: 0 !important; overflow: hidden; }
   .dealer-area-hidden .dealer-placeholder { height: 0; }
@@ -1254,6 +1254,7 @@
 
   /* HAND VALUE (dealer) */
   .hand-value {
+    margin-bottom: 0 !important;
     background: rgba(0,0,0,0.5);
     padding: 3px 16px;
     border-radius: 14px;
@@ -1302,6 +1303,9 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 0;
+    padding: 0;
+    margin: 0;
   }
 
   /* INLINE DEALER RESULT MESSAGE */
