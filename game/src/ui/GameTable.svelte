@@ -1813,7 +1813,7 @@
     transition: background 0.15s;
   }
   .btn-stop-bar:hover { background: #e53935; }
-  .btn-stop-bar-hidden { visibility: hidden; pointer-events: none; }
+  .btn-stop-bar-hidden { display: none; }
   /* Fact bar — pinned bottom strip, no border */
   .fact-below-actions {
     width: 100%;
