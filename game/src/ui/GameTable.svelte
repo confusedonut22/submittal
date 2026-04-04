@@ -96,7 +96,7 @@
   $: cardOverlapSmall = isDesktop ? (isWideDesktop ? '-34px' : '-37px') : '-13px';
   $: dealerOverlap    = isDesktop ? (isWideDesktop ? '-23px' : '-29px') : '-18px';
   $: isFour = $numSlots === 4;
-  $: cardsRowMinH     = isDesktop ? (isWideDesktop ? 185 : 220) : 146;
+  $: cardsRowMinH     = isDesktop ? (isFour ? 110 : (multi ? (isWideDesktop ? 138 : 164) : (isWideDesktop ? 185 : 220))) : (isFour ? 80 : (multi ? 113 : 146));
   $: handColMaxW      = isDesktop ? (multi ? (isWideDesktop ? '325px' : '390px') : (isWideDesktop ? '507px' : '598px')) : (multi ? '260px' : '416px');
   $: canDouble = (() => {
     if (!activeH || activeH.cards.length !== 2 || $balance < activeH.bet) return false;
@@ -463,15 +463,15 @@
         <img src={LOGO_IMAGE} alt="Chad Labs" class="dealer-logo" />
         <div class="dealer-cards-col">
           <div class="hand-value">{dealerDisplay}</div>
-          <div class="cards-row dealer-cards-row">
+          <div class="cards-row">
             {#each $dealerHand as card, i}
               <div class="card-wrap" style="margin-left: {i > 0 ? dealerOverlap : '0'}; z-index: {i}">
                 {#if (isPlay || isIns) && i === 1}
-                  <div class="card dealer-card card-hidden">
+                  <div class="card card-hidden">
                     <img src={LOGO_IMAGE} alt="" class="card-back-logo" />
                   </div>
                 {:else}
-                  <div class="card dealer-card card-face" class:red={card.suit === 'diamonds' || card.suit === 'hearts'}>
+                  <div class="card card-face" class:red={card.suit === 'diamonds' || card.suit === 'hearts'}>
                     <div class="card-corner card-tl">
                       <span class="card-rank">{card.rank}</span>
                       <span class="card-suit-sm">{card.suit === 'diamonds' ? '♦' : card.suit === 'hearts' ? '♥' : card.suit === 'clubs' ? '♣' : '♠'}</span>
@@ -547,10 +547,7 @@
               {/if}
 
               <!-- sb-col sits beside cards-row in a shared flex row for vertical centering -->
-              <div class="sb-and-cards" style="position:relative">
-                {#if (isBet || isResult) && !isReplay && $numSlots > 1}
-                  <button class="btn-remove-corner" on:click={() => removeSlot(idx)}>✕</button>
-                {/if}
+              <div class="sb-and-cards">
                 {#if isBet || isResult || hand.sb.pp > 0 || hand.sb.t > 0}
                 <div class="sb-col">
                   {#each [{k:"pp", n:"Perfect Pairs"}, {k:"t", n:"21+3"}] as sb}
@@ -589,8 +586,8 @@
                 <div class="cards-row" style="min-height: {cardsRowMinH}px">
                 {#if hand.cards.length > 0}
                   {#each hand.cards as card, i}
-                    <div class="card-wrap" style="margin-left: {i > 0 ? cardOverlap : '0'}; z-index: {i}">
-                        <div class="card dealer-card card-face" class:red={card.suit === 'diamonds' || card.suit === 'hearts'}>
+                    <div class="card-wrap" style="margin-left: {i > 0 ? (multi ? cardOverlapSmall : cardOverlap) : '0'}; z-index: {i}">
+                        <div class="card card-face" class:small={multi} class:red={card.suit === 'diamonds' || card.suit === 'hearts'}>
                           <div class="card-corner card-tl">
                             <span class="card-rank">{card.rank}</span>
                             <span class="card-suit-sm">{card.suit === 'diamonds' ? '♦' : card.suit === 'hearts' ? '♥' : card.suit === 'clubs' ? '♣' : '♠'}</span>
@@ -604,11 +601,14 @@
                     </div>
                   {/each}
                 {:else}
-                  <div class="card-placeholder"></div>
-                  <div class="card-placeholder" style="margin-left: {cardOverlap}; opacity: 0.5"></div>
+                  <div class="card-placeholder" class:small={multi}></div>
+                  <div class="card-placeholder" class:small={multi} style="margin-left: {multi ? cardOverlapSmall : cardOverlap}; opacity: 0.5"></div>
                 {/if}
               </div><!-- end cards-row -->
               </div><!-- end sb-and-cards -->
+              {#if (isBet || isResult) && !isReplay && $numSlots > 1}
+                <button class="btn-remove btn-remove-right" on:click={() => removeSlot(idx)}>✕</button>
+              {/if}
 
 
 
@@ -634,7 +634,9 @@
                       <button class="bet-quick-btn" on:click={() => adjustBetByFactor(idx, 2)}>2x</button>
                     </div>
                   {/if}
-
+                  <div class="wager-label wager-label-top">
+                    {fmt(hand.bet, $runtimeCurrency)}{activeSb ? ` · ${activeSb === 'pp' ? 'PP' : '21+3'} ${fmt(hand.sb[activeSb], $runtimeCurrency)}` : ''}
+                  </div>
                 </div>
               {/if}
 
@@ -1115,7 +1117,7 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    padding: 0 14px 0;
+    padding: 4px 14px 0;
     padding-bottom: 180px;
     background: radial-gradient(ellipse at 50% 35%, #153d24, #0c2616 55%, #071a0e 100%);
     transform-origin: top center;
@@ -1160,8 +1162,7 @@
   }
 
   /* DEALER */
-  .dealer-area { min-height: 0; max-height: 195px; position: relative; display: flex; flex-direction: row; align-items: flex-start; justify-content: center; gap: 16px; padding-top: 4px; }
-  .dealer-cards-row.dealer-cards-shrink { transform: scale(0.85); transform-origin: center center; }
+  .dealer-area { min-height: 112px; position: relative; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 16px; }
   .dealer-area-hidden { min-height: 0 !important; overflow: hidden; }
   .dealer-area-hidden .dealer-placeholder { height: 0; }
   .dealer-placeholder { height: 96px; }
@@ -1254,7 +1255,6 @@
 
   /* HAND VALUE (dealer) */
   .hand-value {
-    margin-bottom: 0 !important;
     background: rgba(0,0,0,0.5);
     padding: 3px 16px;
     border-radius: 14px;
@@ -1303,9 +1303,6 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0;
-    padding: 0;
-    margin: 0;
   }
 
   /* INLINE DEALER RESULT MESSAGE */
@@ -1742,12 +1739,11 @@
   .sb-wager-input:focus { border-color: #d4a840; box-shadow: 0 0 6px rgba(212,168,64,0.3); }
 
   /* Invisible spacer mirrors ghost width so card stacks stay at true screen center */
-  .dealer-card { width: 100px !important; height: 140px !important; }
   .ghost-spacer { width: 104px; flex-shrink: 0; visibility: hidden; pointer-events: none; }
 
-  .ghost-wrap { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 26px; }
+  .ghost-wrap { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 32px; }
   .ghost {
-    width: 104px; height: 175px; border-radius: 8px;
+    width: 104px; height: 146px; border-radius: 8px;
     border: 3px dashed rgba(242,232,208,0.55);
     background: rgba(242,232,208,0.04);
     cursor: pointer;
@@ -1758,27 +1754,6 @@
   .ghost:hover { opacity: 1; }
 
   .btn-remove { font-size: 13px; color: #bfb49a; background: none; border: 1px solid #2a5a3a; border-radius: 4px; padding: 2px 10px; margin-top: 4px; opacity: 0.5; }
-  .btn-remove-corner {
-    position: absolute;
-    top: 26px; /* aligns to top of card, below hv-bubble */
-    right: 0;
-    z-index: 20;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    background: rgba(0,0,0,0.65);
-    border: 1px solid rgba(242,232,208,0.3);
-    color: #f2e8d0;
-    font-size: 11px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    opacity: 0.7;
-    padding: 0;
-    line-height: 1;
-  }
-  .btn-remove-corner:hover { opacity: 1; background: rgba(200,0,0,0.7); }
   .btn-remove-right {
     margin-top: 0;
     margin-left: 6px;
@@ -1835,7 +1810,7 @@
     transition: background 0.15s;
   }
   .btn-stop-bar:hover { background: #e53935; }
-  .btn-stop-bar-hidden { display: none; }
+  .btn-stop-bar-hidden { visibility: hidden; pointer-events: none; }
   /* Fact bar — pinned bottom strip, no border */
   .fact-below-actions {
     width: 100%;
@@ -1974,8 +1949,6 @@
     .hand-value         { font-size: 20px; padding: 3px 14px; }
 
     .card        { width: 120px; height: 220px; border-radius: 10px; }
-    .dealer-cards-row .card { height: 160px !important; width: 112px !important; }
-    .dealer-card  { width: 110px !important; height: 150px !important; }
     .card.small  { width: 90px; height: 126px; }
 
     .card-tl     { top: 11px; left: 13px; }
@@ -2015,7 +1988,7 @@
     .sb-col       { gap: 6px; }
     .cards-area   { gap: 8px; }
 
-    .ghost { width: 120px; height: 220px; font-size: 30px; }
+    .ghost { width: 120px; height: 170px; font-size: 30px; }
     .ghost-spacer { width: 120px; }
     .cards-col { min-width: 120px; }
 
