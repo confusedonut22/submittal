@@ -524,7 +524,7 @@
 
 
     <!-- PLAYER HANDS -->
-    <div class="hands-row" class:multi class:four={$numSlots === 4}>
+    <div class="hands-row" class:multi class:four={$numSlots === 4} class:hands-row-bet={isBet}>
       <!-- Invisible left spacer mirrors ghost width — keeps card stack at screen center -->
       {#if (isBet || isResult) && !isReplay && $numSlots < $maxHands}
         <div class="ghost-spacer"></div>
@@ -1163,8 +1163,8 @@
 
   /* DEALER */
   .dealer-area { min-height: 112px; position: relative; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 16px; }
-  .dealer-area-hidden { visibility: hidden; }
-  /* dealer-placeholder keeps height when hidden */
+  .dealer-area-hidden { min-height: 0 !important; overflow: hidden; }
+  .dealer-area-hidden .dealer-placeholder { height: 0; }
   .dealer-placeholder { height: 96px; }
 
   /* CARDS */
@@ -1575,6 +1575,7 @@
 
   /* HANDS ROW */
   .hands-row { display: flex; justify-content: center; gap: 16px; padding-top: 0; min-height: 0; flex: 0 0 auto; align-items: flex-start; flex-wrap: nowrap; }
+  .hands-row-bet { padding-top: 57px; }
   .hands-row.multi { gap: 20px; }
   .hand-col  { display: flex; flex-direction: column; align-items: flex-start; flex: 0 0 auto; min-width: 0; justify-content: flex-start; }
 
