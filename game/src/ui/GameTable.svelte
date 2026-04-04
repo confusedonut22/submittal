@@ -143,7 +143,7 @@
   }
 
   function handMsg(h) {
-    if (h.result) return h.message;
+    // Always show hand value, never per-hand result label
     const v = handValue(h.cards);
     if (isSoft(h.cards) && v <= 21) return `${v - 10}/${v}`;
     return v;
@@ -610,10 +610,7 @@
               </div><!-- end cards-row -->
               </div><!-- end sb-and-cards -->
 
-              <!-- Payout -->
-              {#if hand.payout > 0 && isResult}
-                <div class="payout">+{fmt(hand.payout, $runtimeCurrency)}</div>
-              {/if}
+
 
 
               <!-- Wager label -->
@@ -1125,7 +1122,7 @@
     display: flex;
     flex-direction: column;
     padding: 4px 14px 0;
-    padding-bottom: 220px;
+    padding-bottom: 180px;
     background: radial-gradient(ellipse at 50% 35%, #153d24, #0c2616 55%, #071a0e 100%);
     transform-origin: top center;
     overflow-y: auto;
@@ -1304,6 +1301,7 @@
     opacity: 0.9;
     filter: drop-shadow(0 0 16px rgba(212,168,64,0.5));
     flex-shrink: 0;
+    margin-right: 40px;
   }
   .dealer-cards-col {
     display: flex;
