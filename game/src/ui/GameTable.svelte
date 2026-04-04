@@ -96,7 +96,7 @@
   $: cardOverlapSmall = isDesktop ? (isWideDesktop ? '-34px' : '-37px') : '-13px';
   $: dealerOverlap    = isDesktop ? (isWideDesktop ? '-23px' : '-29px') : '-18px';
   $: isFour = $numSlots === 4;
-  $: cardsRowMinH     = isDesktop ? (isFour ? 110 : (multi ? (isWideDesktop ? 138 : 164) : (isWideDesktop ? 185 : 220))) : (isFour ? 80 : (multi ? 113 : 146));
+  $: cardsRowMinH     = isDesktop ? (isWideDesktop ? 185 : 220) : 146;
   $: handColMaxW      = isDesktop ? (multi ? (isWideDesktop ? '325px' : '390px') : (isWideDesktop ? '507px' : '598px')) : (multi ? '260px' : '416px');
   $: canDouble = (() => {
     if (!activeH || activeH.cards.length !== 2 || $balance < activeH.bet) return false;
@@ -586,8 +586,8 @@
                 <div class="cards-row" style="min-height: {cardsRowMinH}px">
                 {#if hand.cards.length > 0}
                   {#each hand.cards as card, i}
-                    <div class="card-wrap" style="margin-left: {i > 0 ? (multi ? cardOverlapSmall : cardOverlap) : '0'}; z-index: {i}">
-                        <div class="card card-face" class:small={multi} class:red={card.suit === 'diamonds' || card.suit === 'hearts'}>
+                    <div class="card-wrap" style="margin-left: {i > 0 ? cardOverlap : '0'}; z-index: {i}">
+                        <div class="card card-face" class:red={card.suit === 'diamonds' || card.suit === 'hearts'}>
                           <div class="card-corner card-tl">
                             <span class="card-rank">{card.rank}</span>
                             <span class="card-suit-sm">{card.suit === 'diamonds' ? '♦' : card.suit === 'hearts' ? '♥' : card.suit === 'clubs' ? '♣' : '♠'}</span>
@@ -601,8 +601,8 @@
                     </div>
                   {/each}
                 {:else}
-                  <div class="card-placeholder" class:small={multi}></div>
-                  <div class="card-placeholder" class:small={multi} style="margin-left: {multi ? cardOverlapSmall : cardOverlap}; opacity: 0.5"></div>
+                  <div class="card-placeholder"></div>
+                  <div class="card-placeholder" style="margin-left: {cardOverlap}; opacity: 0.5"></div>
                 {/if}
               </div><!-- end cards-row -->
               </div><!-- end sb-and-cards -->
@@ -1743,7 +1743,7 @@
 
   .ghost-wrap { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 32px; }
   .ghost {
-    width: 104px; height: 146px; border-radius: 8px;
+    width: 104px; height: 175px; border-radius: 8px;
     border: 3px dashed rgba(242,232,208,0.55);
     background: rgba(242,232,208,0.04);
     cursor: pointer;
@@ -1988,7 +1988,7 @@
     .sb-col       { gap: 6px; }
     .cards-area   { gap: 8px; }
 
-    .ghost { width: 120px; height: 170px; font-size: 30px; }
+    .ghost { width: 120px; height: 220px; font-size: 30px; }
     .ghost-spacer { width: 120px; }
     .cards-col { min-width: 120px; }
 
