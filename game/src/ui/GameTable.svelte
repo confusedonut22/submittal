@@ -1705,7 +1705,7 @@
     font-size: 20px;
   }
 
-  .action-area-fixed { min-height: 101px; display: flex; flex-direction: column; justify-content: flex-end; }
+  .action-area-fixed { display: flex; flex-direction: column; justify-content: flex-end; }
   .action-area-spacer { flex: 1; }
   .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 5px; }
   /* Full-width red stop bar replaces action buttons during autoplay */
