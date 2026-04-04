@@ -467,11 +467,11 @@
             {#each $dealerHand as card, i}
               <div class="card-wrap" style="margin-left: {i > 0 ? dealerOverlap : '0'}; z-index: {i}">
                 {#if (isPlay || isIns) && i === 1}
-                  <div class="card card-hidden">
+                  <div class="card dealer-card card-hidden">
                     <img src={LOGO_IMAGE} alt="" class="card-back-logo" />
                   </div>
                 {:else}
-                  <div class="card card-face" class:red={card.suit === 'diamonds' || card.suit === 'hearts'}>
+                  <div class="card dealer-card card-face" class:red={card.suit === 'diamonds' || card.suit === 'hearts'}>
                     <div class="card-corner card-tl">
                       <span class="card-rank">{card.rank}</span>
                       <span class="card-suit-sm">{card.suit === 'diamonds' ? '♦' : card.suit === 'hearts' ? '♥' : card.suit === 'clubs' ? '♣' : '♠'}</span>
@@ -590,7 +590,7 @@
                 {#if hand.cards.length > 0}
                   {#each hand.cards as card, i}
                     <div class="card-wrap" style="margin-left: {i > 0 ? cardOverlap : '0'}; z-index: {i}">
-                        <div class="card card-face" class:red={card.suit === 'diamonds' || card.suit === 'hearts'}>
+                        <div class="card dealer-card card-face" class:red={card.suit === 'diamonds' || card.suit === 'hearts'}>
                           <div class="card-corner card-tl">
                             <span class="card-rank">{card.rank}</span>
                             <span class="card-suit-sm">{card.suit === 'diamonds' ? '♦' : card.suit === 'hearts' ? '♥' : card.suit === 'clubs' ? '♣' : '♠'}</span>
@@ -1161,7 +1161,7 @@
 
   /* DEALER */
   .dealer-area { min-height: 0; position: relative; display: flex; flex-direction: row; align-items: flex-start; justify-content: center; gap: 16px; padding-top: 4px; }
-  .dealer-cards-row.dealer-cards-shrink { transform: scale(0.72); transform-origin: center center; }
+  .dealer-cards-row.dealer-cards-shrink { transform: scale(0.85); transform-origin: center center; }
   .dealer-area-hidden { min-height: 0 !important; overflow: hidden; }
   .dealer-area-hidden .dealer-placeholder { height: 0; }
   .dealer-placeholder { height: 96px; }
@@ -1742,6 +1742,7 @@
   .sb-wager-input:focus { border-color: #d4a840; box-shadow: 0 0 6px rgba(212,168,64,0.3); }
 
   /* Invisible spacer mirrors ghost width so card stacks stay at true screen center */
+  .dealer-card { width: 100px !important; height: 140px !important; }
   .ghost-spacer { width: 104px; flex-shrink: 0; visibility: hidden; pointer-events: none; }
 
   .ghost-wrap { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 26px; }
@@ -1973,6 +1974,7 @@
     .hand-value         { font-size: 20px; padding: 3px 14px; }
 
     .card        { width: 120px; height: 220px; border-radius: 10px; }
+    .dealer-card  { width: 110px !important; height: 150px !important; }
     .card.small  { width: 90px; height: 126px; }
 
     .card-tl     { top: 11px; left: 13px; }
