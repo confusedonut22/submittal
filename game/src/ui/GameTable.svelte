@@ -96,7 +96,7 @@
   $: cardOverlapSmall = isDesktop ? (isWideDesktop ? '-55px' : '-57px') : '-13px';
   $: dealerOverlap    = isDesktop ? (isWideDesktop ? '-21px' : '-26px') : '-18px';
   $: isFour = $numSlots === 4;
-  $: cardsRowMinH     = isDesktop ? (isFour ? 79 : (multi ? (isWideDesktop ? 130 : 153) : (isWideDesktop ? 165 : 195))) : (isFour ? 80 : (multi ? 113 : 146));
+  $: cardsRowMinH     = isDesktop ? (isFour ? 71 : (multi ? (isWideDesktop ? 117 : 138) : (isWideDesktop ? 149 : 176))) : (isFour ? 80 : (multi ? 113 : 146));
   $: handColMaxW      = isDesktop ? (multi ? (isWideDesktop ? '325px' : '390px') : (isWideDesktop ? '507px' : '598px')) : (multi ? '260px' : '416px');
   $: canDouble = (() => {
     if (!activeH || activeH.cards.length !== 2 || $balance < activeH.bet) return false;
@@ -1265,8 +1265,8 @@
     filter: drop-shadow(0 0 10px rgba(212,168,64,0.35));
   }
   .felt-logo-large {
-    width: 230px;
-    height: 230px;
+    width: 160px;
+    height: 160px;
     opacity: 0.95;
     filter: drop-shadow(0 0 24px rgba(212,168,64,0.55));
   }
@@ -1275,8 +1275,8 @@
     position: absolute;
     right: 14px;
     top: 0;
-    width: 138px;
-    height: 138px;
+    width: 124px;
+    height: 124px;
     object-fit: contain;
     opacity: 0.9;
     filter: drop-shadow(0 0 16px rgba(212,168,64,0.5));
@@ -1288,8 +1288,8 @@
     position: absolute;
     left: 0;
     top: 0;
-    width: 138px;
-    height: 138px;
+    width: 124px;
+    height: 124px;
     object-fit: contain;
     opacity: 0.9;
     filter: drop-shadow(0 0 16px rgba(212,168,64,0.5));
@@ -1983,31 +1983,31 @@
     .balance-row { min-height: 40px; padding: 6px 20px 0; }
     .session-pill { font-size: 14px; }
 
-    .dealer-area        { min-height: 81px; gap: 16px; }
-    .dealer-logo        { width: 121px; height: 121px; left: 0; top: 0; }
+    .dealer-area        { min-height: 73px; gap: 14px; }
+    .dealer-logo        { width: 109px; height: 109px; left: 0; top: 0; }
     .dealer-placeholder { height: 106px; }
     .hand-value         { font-size: 18px; padding: 2px 12px; }
 
-    .card        { width: 120px; height: 195px; border-radius: 10px; }
-    .card.small  { width: 113px; height: 183px; }
+    .card        { width: 108px; height: 175px; border-radius: 9px; }
+    .card.small  { width: 102px; height: 165px; }
 
-    .card-tl     { top: 13px; left: 15px; }
-    .card-br     { bottom: 13px; right: 15px; }
+    .card-tl     { top: 11px; left: 13px; }
+    .card-br     { bottom: 11px; right: 13px; }
     .card.small .card-tl { top: 11px; left: 13px; }
     .card.small .card-br { bottom: 11px; right: 13px; }
 
-    .card-rank    { font-size: 23px; }
-    .card-suit-sm { font-size: 18px; }
-    .card-center  { font-size: 46px; }
-    .card.small .card-rank    { font-size: 23px; }
-    .card.small .card-suit-sm { font-size: 20px; }
-    .card.small .card-center  { font-size: 49px; }
+    .card-rank    { font-size: 21px; }
+    .card-suit-sm { font-size: 16px; }
+    .card-center  { font-size: 41px; }
+    .card.small .card-rank    { font-size: 21px; }
+    .card.small .card-suit-sm { font-size: 18px; }
+    .card.small .card-center  { font-size: 44px; }
 
-    .card-placeholder       { width: 120px; height: 195px; }
-    .card-placeholder.small { width: 113px; height: 183px; }
+    .card-placeholder       { width: 108px; height: 175px; }
+    .card-placeholder.small { width: 102px; height: 165px; }
 
-    .hands-row      { min-height: 0; gap: 32px; }
-    .hands-row.multi{ gap: 24px; }
+    .hands-row      { min-height: 0; gap: 24px; }
+    .hands-row.multi{ gap: 16px; }
 
     .hv-bubble   { font-size: 16px; padding: 2px 12px; }
     .bet-bar { margin-top: 1px; gap: 3px; }
