@@ -2,9 +2,9 @@
   import { onMount, onDestroy, afterUpdate } from "svelte";
   import { get } from "svelte/store";
   import {
-    phase, balance, dealerHand, hands, activeHand, message, fact, pending,
+    phase, balance, dealerHand, hands, activeHand, message, pending,
     numSlots, maxHands, autoPlay, autoSpeed, autoCount, autoMax, autoMode,
-    showAuto, showRules, showFacts, totalCost, canDeal, introOp, rgsStatus, rgsError, runtimeConfig, runtimeJurisdiction,
+    showAuto, showRules, totalCost, canDeal, introOp, rgsStatus, rgsError, runtimeConfig, runtimeJurisdiction,
     sessionStartedAt, netPosition, runtimeCurrency,
     startIntro, addSlot, removeSlot, addSideBetChip, clearSideBet, setSideBetAmount, addChip, clearBet, setBetLevel, adjustBetByFactor,
     newRound, deal, hit, stand, doubleDown, split, takeInsurance, autoTick, refreshStakeBalance,
@@ -49,7 +49,7 @@
   $: isDesktop = windowWidth >= 768;
   $: isWideDesktop = windowWidth >= 1280;
   $: {
-    maxHands.set(windowWidth >= 600 ? 3 : 2);
+    maxHands.set(windowWidth >= 600 ? 4 : 2);
   }
 
   // ─── COMPUTED ───
@@ -92,11 +92,11 @@
   $: netNegative = $netPosition < 0;
 
   // ─── RESPONSIVE INLINE STYLE VALUES ───
-  $: cardOverlap      = isDesktop ? (isWideDesktop ? '-46px' : '-51px') : '-18px';
-  $: cardOverlapSmall = isDesktop ? (isWideDesktop ? '-34px' : '-37px') : '-13px';
-  $: dealerOverlap    = isDesktop ? (isWideDesktop ? '-23px' : '-29px') : '-18px';
+  $: cardOverlap      = isDesktop ? (isWideDesktop ? '-41px' : '-46px') : '-18px';
+  $: cardOverlapSmall = isDesktop ? (isWideDesktop ? '-55px' : '-57px') : '-13px';
+  $: dealerOverlap    = isDesktop ? (isWideDesktop ? '-21px' : '-26px') : '-18px';
   $: isFour = $numSlots === 4;
-  $: cardsRowMinH     = isDesktop ? (isFour ? 98 : (multi ? (isWideDesktop ? 123 : 146) : (isWideDesktop ? 165 : 195))) : (isFour ? 80 : (multi ? 113 : 146));
+  $: cardsRowMinH     = isDesktop ? (isFour ? 79 : (multi ? (isWideDesktop ? 130 : 153) : (isWideDesktop ? 165 : 195))) : (isFour ? 80 : (multi ? 113 : 146));
   $: handColMaxW      = isDesktop ? (multi ? (isWideDesktop ? '325px' : '390px') : (isWideDesktop ? '507px' : '598px')) : (multi ? '260px' : '416px');
   $: canDouble = (() => {
     if (!activeH || activeH.cards.length !== 2 || $balance < activeH.bet) return false;
@@ -106,8 +106,7 @@
     if (soft) return false;
     return total === 9 || total === 10 || total === 11;
   })();
-  $: canSplit  = activeH && activeH.cards.length === 2 && $balance >= activeH.bet && $numSlots < $maxHands &&
-                 activeH.cards[0].rank === activeH.cards[1].rank;
+  $: canSplit  = activeH && activeH.cards.length === 2 && $balance >= activeH.bet && $numSlots < $maxHands && activeH.cards[0].rank === activeH.cards[1].rank;
   $: isBadBeat = isResult && $message;
   $: dealLabel = $autoPlay ? `Auto ${$autoCount}/${$autoMax}` : isDealer ? "Dealing..." : isIns ? "Insurance..." : isResult ? "Next Hand" : "Deal";
   $: tableControlMode = isDesktop && !isPlay ? 'table' : 'footer';
@@ -256,11 +255,6 @@
     takeInsurance(true, amt > 0 ? amt : null);
   }
 
-  function toggleFacts(event) {
-    event?.stopPropagation?.();
-    showFacts.update((v) => !v);
-  }
-
   function toggleAutoPanel(event) {
     event?.stopPropagation?.();
     if (isPlay) return; // don't open auto panel mid-hand
@@ -348,9 +342,7 @@
         <button class="btn-tab btn-utility" class:active={$showAuto} class:dim={isPlay && !$autoPlay} on:click={toggleAutoPanel}>Auto</button>
       {/if}
       <button class="btn-tab btn-utility" class:active={$showRules} on:click={toggleRulesPanel}>Rules</button>
-      {#if !isReplay}
-        <button class="btn-tab btn-utility btn-fact" class:active={$showFacts} on:click={toggleFacts}>Fact</button>
-      {/if}
+
       <button class="btn-tab btn-utility btn-mute" class:muted={soundMuted} on:click={onToggleMute}>{soundMuted ? 'Unmute' : 'Sound'}</button>
       <button class="btn-tab btn-utility" class:active={showAbout} on:click={toggleAbout}>About</button>
     </div>
@@ -366,6 +358,11 @@
         </span>
       {/if}
     </div>
+    {#if $message && isResult}
+      <div class="nav-result-msg">
+        <span class="nav-result-text" class:win={$message === 'You Win!' || $message === 'Push'} class:lose={$message === 'Dealer Wins'}>{$message}</span>
+      </div>
+    {/if}
     <div class="balance-meta">
       <span class="balance">{fmt($balance, $runtimeCurrency)}</span>
       {#if $rgsStatus === "playing" || $rgsStatus === "round-active"}
@@ -450,12 +447,6 @@
       </div>
     {/if}
 
-    {#if $message && isResult}
-      <div class="dealer-result-msg dealer-result-msg-top">
-        <span class="dealer-result-text" class:win={$message === 'You Win!' || $message === 'Push'} class:lose={$message === 'Dealer Wins'}{$message}</span>
-      </div>
-    {/if}
-
     {#if !isReplay && isBet}
       <div class="felt-menu" on:click={stopEvent}>
         <div class="felt-toggle-copy">{isSocial ? 'Play amount' : 'Wager input'}</div>
@@ -503,11 +494,13 @@
       {/if}
     </div>
 
-    <!-- CHAD LABS LOGO — bet screen only (centered) -->
+    <!-- CHAD LABS LOGO — right side, parallel with dealer logo -->
     {#if isBet}
       <div class="felt-logo-row">
         <img src={LOGO_IMAGE} alt="Chad Labs" class="felt-logo felt-logo-large" />
       </div>
+    {:else}
+      <img src={LOGO_IMAGE} alt="Chad Labs" class="felt-logo felt-logo-right" />
     {/if}
 
     <!-- FIXED HEIGHT MIDDLE ZONE — always 87px, locks player cards to y=422 -->
@@ -517,13 +510,8 @@
         <span class="divider-label">Blackjack pays 7 to 5</span>
         <div class="divider-line"></div>
       </div>
-      {#if $message && isResult}
-        <div class="dealer-result-msg">
-          <span class="dealer-result-text" class:win={$message === 'You Win!' || $message === 'Push'} class:lose={$message === 'Dealer Wins'}>{$message}</span>
-        </div>
-      {/if}
-    </div>
 
+    </div>
     <!-- PLAYER HANDS -->
     <div class="hands-row" class:multi class:four={$numSlots === 4}>
       <!-- Invisible left spacer mirrors ghost width — keeps card stack at screen center -->
@@ -584,7 +572,10 @@
                   {/each}
                 </div>
                 {/if}
-                <div class="cards-row" style="min-height: {cardsRowMinH}px">
+                <div class="cards-row" style="min-height: {cardsRowMinH}px; position: relative;">
+                {#if (isBet || isResult) && !isReplay && $numSlots > 1}
+                  <button class="btn-remove-x" on:click={() => removeSlot(idx)}>×</button>
+                {/if}
                 {#if hand.cards.length > 0}
                   {#each hand.cards as card, i}
                     <div class="card-wrap" style="margin-left: {i > 0 ? (multi ? cardOverlapSmall : cardOverlap) : '0'}; z-index: {i}">
@@ -632,9 +623,7 @@
                       <button class="bet-quick-btn" on:click={() => adjustBetByFactor(idx, 2)}>2x</button>
                     </div>
                   {/if}
-                  <div class="wager-label wager-label-top">
-                    {fmt(hand.bet, $runtimeCurrency)}{activeSb ? ` · ${activeSb === 'pp' ? 'PP' : '21+3'} ${fmt(hand.sb[activeSb], $runtimeCurrency)}` : ''}
-                  </div>
+
                 </div>
               {/if}
 
@@ -671,9 +660,7 @@
                 {/if}
               {/if}
 
-              {#if (isBet || isResult) && !isReplay && $numSlots > 1}
-                <button class="btn-remove" on:click={() => removeSlot(idx)}>Remove</button>
-              {/if}
+
             </div><!-- end cards-col -->
           </div><!-- end cards-area -->
         </div>
@@ -869,12 +856,16 @@
       {/if}
 
 
+      {#if isPlay || isResult}
+        {@const totalWager = $hands.reduce((sum, h) => sum + (h.bet || 0), 0)}
+        <div class="action-wager-label">Wager: {fmt(totalWager, $runtimeCurrency)}</div>
+      {/if}
       <!-- Action area: stop bar replaces grid during autoplay, both same fixed height -->
       <div class="action-area-fixed">
         {#if $autoPlay && !isReplay && !autoplayDisabled}
           <button class="btn-stop-bar" on:click={() => autoPlay.set(false)}>STOP AUTOPLAY</button>
         {:else}
-          <div class="action-grid" class:dim={!isPlay || !activeH || isReplay}>
+<div class="action-grid" class:dim={!isPlay || !activeH || isReplay}>
             <button class="btn-action" disabled={!isPlay || !activeH || isReplay} class:dim={!isPlay || !activeH || isReplay} on:click={hit}>Hit</button>
             <button class="btn-action" disabled={!isPlay || !activeH || isReplay} class:dim={!isPlay || !activeH || isReplay} on:click={stand}>Stand</button>
             <button class="btn-action" class:dim={!canSplit || !isPlay} disabled={!canSplit || !isPlay} on:click={canSplit && isPlay ? split : undefined}>Split</button>
@@ -897,10 +888,7 @@
         </div>
       {/if}
 
-      <!-- Fact bar — below deal button, only visible after cards dealt -->
-      {#if $showFacts && $fact && !isBet}
-        <div class="fact-below-actions" on:click|stopPropagation>{$fact}</div>
-      {/if}
+
     </div>
   </div>
 </div>
@@ -1174,7 +1162,7 @@
     animation: cardIn 0.22s ease both;
     box-shadow: 0 3px 12px rgba(0,0,0,0.3);
   }
-  .card.small  { width: 81px; height: 113px; }
+  .card.small  { width: 104px; height: 200px; }
   .card-face         { background: #fff; }
   .card-custom { background: transparent; overflow: hidden; }
   .card-custom-art {
@@ -1223,10 +1211,10 @@
   .card-placeholder {
     width: 104px; height: 200px;
     border-radius: 8px;
-    border: 1.5px dashed rgba(242,232,208,0.12);
+    border: 2.5px dashed rgba(255,255,255,0.55);
     background: rgba(242,232,208,0.03);
   }
-  .card-placeholder.small { width: 81px; height: 113px; }
+  .card-placeholder.small { width: 113px; height: 183px; }
 
   /* HAND VALUE */
   .hv-bubble {
@@ -1283,12 +1271,25 @@
     filter: drop-shadow(0 0 24px rgba(212,168,64,0.55));
   }
 
+  .felt-logo-right {
+    position: absolute;
+    right: 14px;
+    top: 0;
+    width: 138px;
+    height: 138px;
+    object-fit: contain;
+    opacity: 0.9;
+    filter: drop-shadow(0 0 16px rgba(212,168,64,0.5));
+    pointer-events: none;
+  }
+
   /* DEALER LOGO — fixed to left side */
   .dealer-logo {
     position: absolute;
     left: 0;
-    width: 110px;
-    height: 110px;
+    top: 0;
+    width: 138px;
+    height: 138px;
     object-fit: contain;
     opacity: 0.9;
     filter: drop-shadow(0 0 16px rgba(212,168,64,0.5));
@@ -1325,28 +1326,27 @@
 
   /* FIXED HEIGHT MID ZONE — keeps player cards locked */
   .mid-zone {
-    height: 52px !important;
-    min-height: 52px !important;
-    max-height: 52px !important;
+    height: 28px !important;
+    min-height: 28px !important;
+    max-height: 28px !important;
     flex-shrink: 0 !important;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    overflow: hidden;
+    overflow: visible;
   }
 
   /* DIVIDER — play screen */
   .divider-row {
     display: flex;
-    align-items: flex-start;
-    padding-top: 4px;
-    height: 93px;
+    align-items: center;
+    height: 28px;
     flex-shrink: 0;
-    margin-top: -47px;
+    margin-top: 0;
     margin-bottom: 0;
   }
-  .divider-line  { flex: 1; height: 1px; background: rgba(212,168,64,0.09); }
-  .divider-label { font-size: 14px; padding: 0 14px; opacity: 0.6; font-family: 'Inter', sans-serif; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
+  .divider-line  { flex: 1; height: 1px; background: rgba(212,168,64,0.35); }
+  .divider-label { font-size: 13px; padding: 0 14px; opacity: 0.75; font-family: 'Inter', sans-serif; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
 
   /* FACT BLOCK — top-right corner, beside dealer card */
   .fact-block {
@@ -1709,7 +1709,7 @@
   .sb-box {
     width: 72px; min-height: 52px;
     border-radius: 7px;
-    border: 1.5px dashed rgba(242,232,208,0.18);
+    border: 2.5px dashed rgba(255,255,255,0.55);
     background: rgba(242,232,208,0.02);
     cursor: pointer;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -1761,7 +1761,7 @@
   .ghost-wrap { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 28px; }
   .ghost {
     width: 104px; height: 146px; border-radius: 8px;
-    border: 2px dashed rgba(242,232,208,0.15);
+    border: 2.5px dashed rgba(255,255,255,0.55);
     background: rgba(242,232,208,0.03);
     cursor: pointer;
     display: flex; align-items: center; justify-content: center;
@@ -1770,7 +1770,28 @@
   }
   .ghost:hover { opacity: 0.4; }
 
-  .btn-remove { font-size: 13px; color: #bfb49a; background: none; border: 1px solid #2a5a3a; border-radius: 4px; padding: 2px 10px; margin-top: 4px; opacity: 0.5; }
+  .btn-remove { display: none; }
+  .btn-remove-x {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    z-index: 10;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1px solid rgba(242,232,208,0.35);
+    background: rgba(7,26,14,0.9);
+    color: #bfb49a;
+    font-size: 16px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    opacity: 0.7;
+    cursor: pointer;
+  }
+  .btn-remove-x:hover { opacity: 1; color: #ef5350; border-color: #ef5350; }
 
   /* BOTTOM DOCK */
   .bottom-dock {
@@ -1800,6 +1821,16 @@
 
   .action-area-fixed { display: flex; flex-direction: column; justify-content: flex-end; }
   .action-area-spacer { flex: 1; }
+  .action-wager-label {
+    text-align: center;
+    font-family: 'Oswald', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: rgba(242,232,208,0.6);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+  }
   .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 5px; }
   /* Full-width red stop bar replaces action buttons during autoplay */
   .btn-stop-bar {
@@ -1841,7 +1872,7 @@
     box-shadow: none;
   }
   .btn-action {
-    padding: 13px 0; border-radius: 7px; font-size: 16px; font-weight: 700;
+    padding: 9px 0; border-radius: 7px; font-size: 16px; font-weight: 700;
     background: #1d4a2c; color: #f2e8d0; border: 1px solid #2a5a3a;
     font-family: 'Inter', sans-serif; letter-spacing: 0.04em; text-transform: uppercase;
   }
@@ -1948,37 +1979,37 @@
     .table-wrap  { height: 100vh; overflow: hidden; }
     .felt        { overflow: hidden; padding: 6px 24px 0; }
 
-    .balance     { font-size: 28px; }
-    .balance-row { min-height: 44px; padding: 8px 24px 0; }
+    .balance     { font-size: 25px; }
+    .balance-row { min-height: 40px; padding: 6px 20px 0; }
     .session-pill { font-size: 14px; }
 
-    .dealer-area        { min-height: 118px; gap: 24px; }
-    .dealer-logo        { width: 120px; height: 120px; left: 0; }
+    .dealer-area        { min-height: 81px; gap: 16px; }
+    .dealer-logo        { width: 121px; height: 121px; left: 0; top: 0; }
     .dealer-placeholder { height: 106px; }
-    .hand-value         { font-size: 20px; padding: 3px 14px; }
+    .hand-value         { font-size: 18px; padding: 2px 12px; }
 
     .card        { width: 120px; height: 195px; border-radius: 10px; }
-    .card.small  { width: 90px; height: 126px; }
+    .card.small  { width: 113px; height: 183px; }
 
-    .card-tl     { top: 11px; left: 13px; }
-    .card-br     { bottom: 11px; right: 13px; }
-    .card.small .card-tl { top: 8px; left: 10px; }
-    .card.small .card-br { bottom: 8px; right: 10px; }
+    .card-tl     { top: 13px; left: 15px; }
+    .card-br     { bottom: 13px; right: 15px; }
+    .card.small .card-tl { top: 11px; left: 13px; }
+    .card.small .card-br { bottom: 11px; right: 13px; }
 
     .card-rank    { font-size: 23px; }
     .card-suit-sm { font-size: 18px; }
     .card-center  { font-size: 46px; }
-    .card.small .card-rank    { font-size: 17px; }
-    .card.small .card-suit-sm { font-size: 14px; }
-    .card.small .card-center  { font-size: 35px; }
+    .card.small .card-rank    { font-size: 23px; }
+    .card.small .card-suit-sm { font-size: 20px; }
+    .card.small .card-center  { font-size: 49px; }
 
     .card-placeholder       { width: 120px; height: 195px; }
-    .card-placeholder.small { width: 90px; height: 126px; }
+    .card-placeholder.small { width: 113px; height: 183px; }
 
     .hands-row      { min-height: 0; gap: 32px; }
     .hands-row.multi{ gap: 24px; }
 
-    .hv-bubble   { font-size: 18px; padding: 3px 14px; }
+    .hv-bubble   { font-size: 16px; padding: 2px 12px; }
     .bet-bar { margin-top: 1px; gap: 3px; }
     .wager-label { font-size: 18px; }
     .bet-quick-actions { gap: 6px; padding: 3px; }
@@ -2058,7 +2089,7 @@
     /* Compact felt logo + divider */
     .felt-logo-row  { padding: 2px 0 2px; }
     .felt-logo      { width: 52px; height: 52px; }
-    .felt-logo-large { width: 120px; height: 120px; }
+    .felt-logo-large { width: 108px; height: 108px; }
 
     /* Compact fact block */
     .fact-block { width: 140px; font-size: 11px; padding: 8px 10px; top: 8px; right: 8px; left: auto; }
@@ -2108,6 +2139,23 @@
     .rules-panel    { max-height: min(42vh, 300px); }
     .panel-title    { font-size: 18px; }
   }
+
+  .nav-result-msg {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+  }
+  .nav-result-text {
+    font-family: 'Oswald', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    animation: fadeIn 0.3s ease;
+  }
+  .nav-result-text.win  { color: #66ff88; }
+  .nav-result-text.lose { color: #ef5350; }
 
   /* ANIMATIONS */
   @keyframes introFade {
