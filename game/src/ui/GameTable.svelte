@@ -450,6 +450,12 @@
       </div>
     {/if}
 
+    {#if $message && isResult}
+      <div class="dealer-result-msg dealer-result-msg-top">
+        <span class="dealer-result-text" class:win={$message === 'You Win!' || $message === 'Push'} class:lose={$message === 'Dealer Wins'}{$message}</span>
+      </div>
+    {/if}
+
     {#if !isReplay && isBet}
       <div class="felt-menu" on:click={stopEvent}>
         <div class="felt-toggle-copy">{isSocial ? 'Play amount' : 'Wager input'}</div>
@@ -1294,6 +1300,13 @@
   }
 
   /* INLINE DEALER RESULT MESSAGE */
+  .dealer-result-msg-top {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 6px 0 2px;
+    min-height: 36px;
+  }
   .dealer-result-msg {
     display: flex;
     align-items: center;
