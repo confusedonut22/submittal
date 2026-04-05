@@ -863,21 +863,17 @@
       {/if}
 
 
-      <!-- Play / Action buttons — fixed height container prevents layout jump -->
+      <!-- Action area: stop bar replaces grid during autoplay, both same fixed height -->
       <div class="action-area-fixed">
-        {#if isPlay && !$autoPlay && activeH && !isReplay}
-          <div class="action-grid">
-            <button class="btn-action" on:click={hit}>Hit</button>
-            <button class="btn-action" on:click={stand}>Stand</button>
-            <button class="btn-action" class:dim={!canSplit} disabled={!canSplit} on:click={canSplit ? split : undefined}>Split</button>
-            <button class="btn-action" class:dim={!canDouble} disabled={!canDouble} on:click={canDouble ? doubleDown : undefined}>x2</button>
-          </div>
-        {:else if $autoPlay && !isReplay && !autoplayDisabled}
-          <!-- Full-width red stop bar during autoplay -->
-          <button class="btn-stop-bar" on:click={() => autoPlay.set(false)}>■ Stop Auto</button>
+        {#if $autoPlay && !isReplay && !autoplayDisabled}
+          <button class="btn-stop-bar" on:click={() => autoPlay.set(false)}>STOP AUTOPLAY</button>
         {:else}
-          <!-- Spacer to hold layout -->
-          <div class="action-area-spacer"></div>
+          <div class="action-grid" class:dim={!isPlay || !activeH || isReplay}>
+            <button class="btn-action" disabled={!isPlay || !activeH || isReplay} class:dim={!isPlay || !activeH || isReplay} on:click={hit}>Hit</button>
+            <button class="btn-action" disabled={!isPlay || !activeH || isReplay} class:dim={!isPlay || !activeH || isReplay} on:click={stand}>Stand</button>
+            <button class="btn-action" class:dim={!canSplit || !isPlay} disabled={!canSplit || !isPlay} on:click={canSplit && isPlay ? split : undefined}>Split</button>
+            <button class="btn-action" class:dim={!canDouble || !isPlay} disabled={!canDouble || !isPlay} on:click={canDouble && isPlay ? doubleDown : undefined}>x2</button>
+          </div>
         {/if}
       </div>
 
@@ -1329,8 +1325,12 @@
   /* DIVIDER — play screen */
   .divider-row {
     display: flex;
-    align-items: center;
-    margin: 2px 0;
+    align-items: flex-start;
+    padding-top: 4px;
+    height: 93px;
+    flex-shrink: 0;
+    margin-top: -47px;
+    margin-bottom: 0;
   }
   .divider-line  { flex: 1; height: 1px; background: rgba(212,168,64,0.09); }
   .divider-label { font-size: 14px; padding: 0 14px; opacity: 0.6; font-family: 'Inter', sans-serif; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
@@ -1791,16 +1791,18 @@
   /* Full-width red stop bar replaces action buttons during autoplay */
   .btn-stop-bar {
     width: 100%;
-    padding: 12px;
+    min-height: 86px;
+    padding: 0;
     background: #c62828;
-    color: #fff;
-    font-family: inherit;
-    font-size: 16px;
+    color: #000;
+    font-family: 'Oswald', sans-serif;
+    font-size: 28px;
     font-weight: 700;
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
     margin-bottom: 5px;
     transition: background 0.15s;
   }
