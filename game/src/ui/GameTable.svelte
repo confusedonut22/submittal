@@ -490,12 +490,7 @@
               </div>
             {/each}
           </div>
-          <!-- Result message to the right of dealer cards -->
-          {#if $message && isResult}
-            <div class="dealer-result-msg">
-              <span class="dealer-result-text" class:win={$message === 'You Win!' || $message === 'Push'} class:lose={$message === 'Dealer Wins'}>{$message}</span>
-            </div>
-          {/if}
+
         </div>
       {:else}
         <div class="dealer-placeholder"></div>
@@ -516,6 +511,11 @@
         <span class="divider-label">Blackjack pays 7 to 5</span>
         <div class="divider-line"></div>
       </div>
+      {#if $message && isResult}
+        <div class="dealer-result-msg">
+          <span class="dealer-result-text" class:win={$message === 'You Win!' || $message === 'Push'} class:lose={$message === 'Dealer Wins'}>{$message}</span>
+        </div>
+      {/if}
     </div>
 
     <!-- PLAYER HANDS -->
@@ -1298,7 +1298,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0 12px;
+    padding: 4px 0 0;
   }
   .dealer-result-text {
     font-family: 'Oswald', sans-serif;
