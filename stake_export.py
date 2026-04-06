@@ -19,7 +19,7 @@ from collections import Counter
 from pathlib import Path
 from typing import Dict, Iterable, List
 
-from engine import (
+from math.engine import (
     BJ_MULTIPLIER,
     MONEY_SCALE,
     Card,
@@ -122,7 +122,7 @@ def play_round_record(
     twenty_one_plus_three_bet: int = 0,
     take_insurance: bool = False,
 ) -> Dict:
-    from engine import deal_round  # local import to keep module boundary narrow
+    from math.engine import deal_round  # local import to keep module boundary narrow
 
     side_bets = {}
     if perfect_pairs_bet:
@@ -189,7 +189,7 @@ def play_round_record(
         # Check for a split on the initial hand
         action = basic_strategy_action(hand.cards, state.dealer_cards[0])
         if action == "split":
-            from engine import split_hand as engine_split_hand
+            from math.engine import split_hand as engine_split_hand
 
             success, split_hands = engine_split_hand(state, 0, shoe)
             # split_hand already draws the second card for each child and
